@@ -15,6 +15,8 @@ Template module classes and functions
     :toctree: ../stubs/
 
     TemplateClass
+
+    TODO
 """
 
 from .template_class import TemplateClass
