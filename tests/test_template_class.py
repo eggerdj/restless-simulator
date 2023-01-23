@@ -1,7 +1,7 @@
 """Tests for template."""
 from unittest import TestCase
 
-from prototype_template import TemplateClass
+from restless_simulator import TemplateClass
 
 
 class TestPrototypeTemplate(TestCase):

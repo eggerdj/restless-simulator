@@ -1,9 +1,9 @@
 """
 ===========================================================
-Template module (:mod:`prototype_template.template_module`)
+Template module (:mod:`restless_simulator.circuit`)
 ===========================================================
 
-.. currentmodule:: prototype_template.template_module
+.. currentmodule:: restless_simulator.circuit
 
 This module contains an :class:`TemplateClass`
 which is the main class for this template example.

@@ -9,7 +9,7 @@ with open("requirements.txt") as f:
     install_requires = f.read().splitlines()
 
 setuptools.setup(
-    name="prototype_template",
+    name="restless_simulator",
     description="Repository for a quantum prototype",
     long_description=long_description,
     long_description_content_type="text/markdown",

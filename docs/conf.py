@@ -28,7 +28,7 @@ author = ""
 _rootdir = Path(__file__).parent.parent
 
 # The full version, including alpha/beta/rc tags
-release = metadata_version("prototype_template")
+release = metadata_version("restless_simulator")
 # The short X.Y version
 version = ".".join(release.split(".")[:2])
 
