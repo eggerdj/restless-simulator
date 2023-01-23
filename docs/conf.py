@@ -21,7 +21,7 @@ from pathlib import Path
 
 from importlib_metadata import version as metadata_version
 
-project = "Template project"
+project = "Restless Simulator"
 copyright = "2022"  # pylint: disable=redefined-builtin
 author = ""
 
@@ -50,7 +50,7 @@ numfig_format = {"table": "Table %s"}
 language = "en"
 pygments_style = "colorful"
 add_module_names = False
-modindex_common_prefix = ["template_project."]
+modindex_common_prefix = ["restless_simulator."]
 
 # html theme options
 html_static_path = ["_static"]
