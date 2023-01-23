@@ -39,7 +39,7 @@ class TemplateClass:
             `parameter` input multiplied by `some_parameter`
 
         Example:
-            >>> from prototype_template import TemplateClass
+            >>> from restless_simulator import TemplateClass
             >>> t = TemplateClass(some_parameter=3)
             >>> t.multiply(2)
             6

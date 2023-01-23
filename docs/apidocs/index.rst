@@ -1,6 +1,6 @@
-.. prototype_template:
+.. restless_simulator:
 
-.. module:: prototype_template
+.. module:: restless_simulator
 
 =============================
 Template API References

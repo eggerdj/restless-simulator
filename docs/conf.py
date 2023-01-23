@@ -21,14 +21,14 @@ from pathlib import Path
 
 from importlib_metadata import version as metadata_version
 
-project = "Template project"
+project = "Restless Simulator"
 copyright = "2022"  # pylint: disable=redefined-builtin
 author = ""
 
 _rootdir = Path(__file__).parent.parent
 
 # The full version, including alpha/beta/rc tags
-release = metadata_version("prototype_template")
+release = metadata_version("restless_simulator")
 # The short X.Y version
 version = ".".join(release.split(".")[:2])
 
@@ -50,7 +50,7 @@ numfig_format = {"table": "Table %s"}
 language = "en"
 pygments_style = "colorful"
 add_module_names = False
-modindex_common_prefix = ["template_project."]
+modindex_common_prefix = ["restless_simulator."]
 
 # html theme options
 html_static_path = ["_static"]
