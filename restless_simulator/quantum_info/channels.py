@@ -1,3 +1,13 @@
+# This code is a Qiskit project.
+
+# (C) Copyright IBM 2023.
+
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
 """Qutrit Quantum Channels"""
 import numpy as np
 from qiskit.exceptions import QiskitError
@@ -50,15 +60,22 @@ def amplitude_damping_channel(
         \end{bmatrix}
 
     where :math:`0\leq{}p_{ij}\leq{}1\ \forall{}i,j\in\{0,1,2\}` and :math:`0\leq{}p_{21} +
-    p_{20}\leq{}1`. The amplitude damping parameters :math:`p_{ij}` define the decay rate from state
-    `i` to state `j`. For the relaxation time :math:`T_1` of a qubit, the relaxation parameter
+    p_{20}\leq{}1`. The amplitude damping parameter :math:`p_{ij}` is defined by the decay rate from
+    state `i` to state `j`. For the relaxation time :math:`T_1` of a qubit, the relaxation parameter
     :math:`p_{10}` is typically defined as :math:`p_{10} = 1 - exp(-\Delta{}t/T_1)` for a given
     gate-time :math:`\Delta{}t`.
 
+    References:
+        #. S. Chessa and V. Giovannetti, ‘Quantum capacity analysis of multi-level amplitude damping
+           channels’, Commun Phys, vol. 4, no. 1, Art. no. 1, Feb. 2021,
+           doi:10.1038/s42005-021-00524-4.
+
+
     Args:
-        param10: the :math:`\ket{1}-\ket{0}` damping parameter.
-        param21: the :math:`\ket{2}-\ket{1}` damping parameter.
-        param20: the :math:`\ket{2}-\ket{0}` damping parameter.
+        param10: the :math:`\ket{1}\to\ket{0}` damping parameter :math:`p_{10}`.
+        param21: the :math:`\ket{2}\to\ket{1}` damping parameter :math:`p_{21}`.
+        param20: the :math:`\ket{2}\to\ket{0}` damping parameter :math:`p_{20}`. Defaults to
+            ``0.0``.
 
     Raises:
         QiskitError: if ``param10``, ``param21``, and ``param20`` are less than zero or too large.
@@ -94,7 +111,7 @@ def amplitude_damping_channel(
 
 # This function is based on `qiskit_aer.noise.depolarizing_error`.
 def depolarizing_channel(param: float) -> Kraus:
-    r"""Return a qutrit depolarizing channel with depolarizing parameter ``param``.
+    r"""Return a single-qutrit depolarizing channel.
 
     The depolarizing channel is modelled as
 
@@ -112,9 +129,11 @@ def depolarizing_channel(param: float) -> Kraus:
     where :math:`B_i` is the ith Barg matrix.
 
     References:
-        [1] A. Barg, ‘A low-rate bound on the reliability of a quantum discrete memoryless channel’,
-        IEEE Transactions on Information Theory, vol. 48, no. 12, pp. 3096–3100, Dec. 2002, doi:
-        10.1109/TIT.2002.805080.
+        #. A. Barg, ‘A low-rate bound on the reliability of a quantum discrete memoryless channel’,
+           IEEE Transactions on Information Theory, vol. 48, no. 12, pp. 3096–3100, Dec. 2002,
+           doi:10.1109/TIT.2002.805080.
+        #. S. Salimi and M. M. Soltanzadeh, ‘Investigation of quantum roulette’, Int. J. Quantum
+           Inform., vol. 07, no. 03, pp. 615–626, Apr. 2009, doi:10.1142/S0219749909004992.
 
     Args:
         param: The depolarizing channel parameter.
@@ -130,8 +149,8 @@ def depolarizing_channel(param: float) -> Kraus:
 
     # Verify parameter is correct. This check is based on code from Qiskit-Aer, for the qubit
     # depolarizing error.
-    num_qubits = 1
-    num_terms = 9**num_qubits
+    num_qutrits = 1
+    num_terms = 9**num_qutrits
     # Maximum depolarizing channel parameter, for a uniform Barg-operators channel: a qutrit
     # analogue of a uniform Pauli channel.
     max_param = num_terms / (num_terms - 1)

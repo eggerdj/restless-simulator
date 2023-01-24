@@ -1,3 +1,13 @@
+# This code is a Qiskit project.
+
+# (C) Copyright IBM 2023.
+
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
 """Qutrit unitary gate.
 
 This code is a modified version of the Qiskit implementation of a qubit unitary gate.
@@ -61,13 +71,13 @@ class QutritUnitaryGate(Gate):
 
         # Check input is N-qubit matrix
         input_dim, output_dim = data.shape
-        num_qubits = int(np.log(input_dim) / np.log(3))
-        if input_dim != output_dim or 3**num_qubits != input_dim:
+        num_qutrits = int(np.log(input_dim) / np.log(3))
+        if input_dim != output_dim or 3**num_qutrits != input_dim:
             raise ExtensionError("Input matrix is not an N-qutrit operator.")
 
         self._qasm_name = None
         self._qasm_definition = None
-        super().__init__("unitary", num_qubits, [data], label=label)
+        super().__init__("unitary", num_qutrits, [data], label=label)
 
     def __eq__(self, other):
         if not isinstance(other, QutritUnitaryGate):
@@ -133,6 +143,11 @@ class QutritUnitaryGate(Gate):
         column. If the input gate is not unitary, an error will be thrown as the resulting qutrit
         gate will be non-unitary.
 
+        .. warning::
+
+            This method currently only supports single-qubit gates. Extending this to two or more
+            qubits is a goal of the project.
+
         Args:
             qubit_gate: The qubit gate to convert into a qutrit gate.
             label: Optional label for the new qutrit gate. Defaults to None.
@@ -144,6 +159,7 @@ class QutritUnitaryGate(Gate):
         Returns:
             QutritUnitaryGate: a qutrit gate equivalent to the input qubit gate.
         """
+        # TODO: Extend this method to support multi-qubit gates and multi-qutrit gates.
         qubit_unitary = qubit_gate.to_matrix()
         if qubit_unitary.shape != (2, 2):
             raise QiskitError(
