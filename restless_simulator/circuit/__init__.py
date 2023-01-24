@@ -1,22 +1,18 @@
 """
 ===========================================================
-Template module (:mod:`restless_simulator.circuit`)
+Circuit module (:mod:`restless_simulator.circuit`)
 ===========================================================
 
 .. currentmodule:: restless_simulator.circuit
 
-This module contains an :class:`TemplateClass`
-which is the main class for this template example.
-
-Template module classes and functions
-=====================================
+This module contains code to create circuits with qutrit unitaries and qutrit error channels.
 
 .. autosummary::
     :toctree: ../stubs/
 
-    TemplateClass
-
-    TODO
+    QutritQuantumChannelOperation
+    QutritUnitaryGate
 """
 
-from .template_class import TemplateClass
+from .qutrit_unitary_gate import QutritUnitaryGate
+from .qutrit_quantum_channel_operation import QutritQuantumChannelOperation
