@@ -39,7 +39,6 @@ class RestlessJob(JobV1):
 
         Does nothing.
         """
-        pass
 
     def result(self) -> Result:
         """Get job result.
@@ -52,7 +51,9 @@ class RestlessJob(JobV1):
     def status(self) -> JobStatus:
         """Gets the status of the simulator job.
 
-        As the simulator does not run asynchronously, the job result is always done. Until the simulator supports 
+        As the simulator does not run asynchronously, the job result is always done. Until the
+        simulator supports asynchronous execution and failed jobs, this method will return
+        :attr:`JobStatus.DONE`.
 
         Returns:
             JobStatus: The current JobStatus.
