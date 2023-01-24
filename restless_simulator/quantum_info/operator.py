@@ -1,7 +1,9 @@
+"""Operator class compatible with qutrit operator labels."""
 import numpy as np
 from qiskit.quantum_info import Operator as QiskitOperator
 
 
+# pylint: disable=too-many-ancestors
 class Operator(QiskitOperator):
     """A qutrit compatible operator class.
 
@@ -34,23 +36,23 @@ class Operator(QiskitOperator):
             QiskitOperator: The operator for the label.
         """
         ## Barg single-qutrit matrices
-        BARG_X = np.array([[0, 1, 0], [0, 0, 1], [1, 0, 0]], dtype=complex)
-        BARG_W = np.exp(2j * np.pi / 3)
-        BARG_Z = np.diag([1, BARG_W, BARG_W**2])
-        BARG = {
+        barg_x = np.array([[0, 1, 0], [0, 0, 1], [1, 0, 0]], dtype=complex)
+        barg_w = np.exp(2j * np.pi / 3)
+        barg_z = np.diag([1, barg_w, barg_w**2])
+        barg = {
             "B0": np.eye(3, dtype=complex),
-            "B1": BARG_X,
-            "B2": BARG_Z,
-            "B3": BARG_X @ BARG_X,
-            "B4": BARG_X @ BARG_Z,
-            "B5": BARG_X @ BARG_X @ BARG_Z,
-            "B6": BARG_X @ BARG_Z @ BARG_Z,
-            "B7": BARG_X @ BARG_X @ BARG_Z @ BARG_Z,
-            "B8": BARG_Z @ BARG_Z,
+            "B1": barg_x,
+            "B2": barg_z,
+            "B3": barg_x @ barg_x,
+            "B4": barg_x @ barg_z,
+            "B5": barg_x @ barg_x @ barg_z,
+            "B6": barg_x @ barg_z @ barg_z,
+            "B7": barg_x @ barg_x @ barg_z @ barg_z,
+            "B8": barg_z @ barg_z,
         }
-        if label in BARG:
-            return BARG[label]
+        if label in barg:
+            return barg[label]
         ##
-        
+
         # Defer to QiskitOperator.from_label
         return super().from_label(label)
