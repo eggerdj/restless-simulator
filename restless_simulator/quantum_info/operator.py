@@ -17,8 +17,13 @@ class Operator(QiskitOperator):
     The following labels are accepted, over-and-above those in
     :class:`qiskit.quantum_info.Operator`:
 
-    - BN: The Nth Barg-matrix qutrit operator (:math:`N\\in{0,1,\\ldots,8}`). See references for
+    - BN: The Nth Barg-matrix qutrit operator (:math:`N\\in\\{0,1,\\ldots,8\\}`). See references for
       more details.
+
+    .. warning::
+
+        This class supports operators of arbitrary sizes and not just qutrit operators. Make sure
+        you are working with an appropriately sized operator for your code.
 
     References:
         [1] A. Barg, ‘A low-rate bound on the reliability of a quantum discrete memoryless channel’,
