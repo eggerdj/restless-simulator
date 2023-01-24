@@ -71,13 +71,13 @@ class QutritUnitaryGate(Gate):
 
         # Check input is N-qubit matrix
         input_dim, output_dim = data.shape
-        num_qubits = int(np.log(input_dim) / np.log(3))
-        if input_dim != output_dim or 3**num_qubits != input_dim:
+        num_qutrits = int(np.log(input_dim) / np.log(3))
+        if input_dim != output_dim or 3**num_qutrits != input_dim:
             raise ExtensionError("Input matrix is not an N-qutrit operator.")
 
         self._qasm_name = None
         self._qasm_definition = None
-        super().__init__("unitary", num_qubits, [data], label=label)
+        super().__init__("unitary", num_qutrits, [data], label=label)
 
     def __eq__(self, other):
         if not isinstance(other, QutritUnitaryGate):

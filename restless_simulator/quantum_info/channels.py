@@ -140,8 +140,8 @@ def depolarizing_channel(param: float) -> Kraus:
 
     # Verify parameter is correct. This check is based on code from Qiskit-Aer, for the qubit
     # depolarizing error.
-    num_qubits = 1
-    num_terms = 9**num_qubits
+    num_qutrits = 1
+    num_terms = 9**num_qutrits
     # Maximum depolarizing channel parameter, for a uniform Barg-operators channel: a qutrit
     # analogue of a uniform Pauli channel.
     max_param = num_terms / (num_terms - 1)
