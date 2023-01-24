@@ -17,7 +17,8 @@ class Operator(QiskitOperator):
     The following labels are accepted, over-and-above those in
     :class:`qiskit.quantum_info.Operator`:
 
-    - BN: The Nth Barg-matrix qutrit operator. See references for more details.
+    - BN: The Nth Barg-matrix qutrit operator (:math:`N\\in{0,1,\\ldots,8}`). See references for
+      more details.
 
     References:
         [1] A. Barg, ‘A low-rate bound on the reliability of a quantum discrete memoryless channel’,
@@ -41,14 +42,14 @@ class Operator(QiskitOperator):
         barg_z = np.diag([1, barg_w, barg_w**2])
         barg = {
             "B0": np.eye(3, dtype=complex),
-            "B1": barg_x,
-            "B2": barg_z,
-            "B3": barg_x @ barg_x,
+            "B1": barg_z,
+            "B2": barg_z @ barg_z,
+            "B3": barg_x,
             "B4": barg_x @ barg_z,
-            "B5": barg_x @ barg_x @ barg_z,
-            "B6": barg_x @ barg_z @ barg_z,
-            "B7": barg_x @ barg_x @ barg_z @ barg_z,
-            "B8": barg_z @ barg_z,
+            "B5": barg_x @ barg_z @ barg_z,
+            "B6": barg_x @ barg_x,
+            "B7": barg_x @ barg_x @ barg_z,
+            "B8": barg_x @ barg_x @ barg_z @ barg_z,
         }
         if label in barg:
             return barg[label]
