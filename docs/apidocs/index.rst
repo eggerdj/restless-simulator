@@ -3,10 +3,11 @@
 .. module:: restless_simulator
 
 =============================
-Template API References
+Package Modules
 =============================
 
 .. toctree::
    :maxdepth: 1
 
-   template
+   circuit
+   quantum_info
