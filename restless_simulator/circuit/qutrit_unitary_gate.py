@@ -159,6 +159,7 @@ class QutritUnitaryGate(Gate):
         Returns:
             QutritUnitaryGate: a qutrit gate equivalent to the input qubit gate.
         """
+        # TODO: Extend this method to support multi-qubit gates and multi-qutrit gates.
         qubit_unitary = qubit_gate.to_matrix()
         if qubit_unitary.shape != (2, 2):
             raise QiskitError(
