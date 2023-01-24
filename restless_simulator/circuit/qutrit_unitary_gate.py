@@ -143,6 +143,11 @@ class QutritUnitaryGate(Gate):
         column. If the input gate is not unitary, an error will be thrown as the resulting qutrit
         gate will be non-unitary.
 
+        .. warning::
+
+            This method currently only supports single-qubit gates. Extending this to two or more
+            qubits is a goal of the project.
+
         Args:
             qubit_gate: The qubit gate to convert into a qutrit gate.
             label: Optional label for the new qutrit gate. Defaults to None.
