@@ -9,13 +9,16 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 """
-===========================================================
+==================================================
 Circuit module (:mod:`restless_simulator.circuit`)
-===========================================================
+==================================================
 
 .. currentmodule:: restless_simulator.circuit
 
 This module contains code to create circuits with qutrit unitaries and qutrit error channels.
+
+Qutrit Operations and Gates
+===========================
 
 .. autosummary::
     :toctree: ../stubs/

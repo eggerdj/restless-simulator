@@ -11,3 +11,4 @@ Package Modules
 
    circuit
    quantum_info
+   simulator
