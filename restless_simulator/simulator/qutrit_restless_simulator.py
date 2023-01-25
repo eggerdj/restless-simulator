@@ -95,7 +95,7 @@ class QutritRestlessSimulator(BackendV2):
 
     @property
     def shots(self) -> int:
-        """Return the shots used."""
+        """Return the number of shots to be used by the simulator."""
         return self.options.shots
 
     def _setup_target(self):

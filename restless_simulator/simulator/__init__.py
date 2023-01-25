@@ -15,16 +15,15 @@ Simulator module (:mod:`restless_simulator.simulator`)
 
 .. currentmodule:: restless_simulator.simulator
 
-=================
 Simulator Classes
 =================
 
 .. autosummary::
     :toctree: ../stubs/
 
+    QutritRestlessSimulator
     RestlessJob
 
-===================
 Simulator Utilities
 ===================
 
@@ -37,3 +36,4 @@ Simulator Utilities
 
 from .sample_buffer import SampleBuffer
 from .restless_job import RestlessJob
+from .qutrit_restless_simulator import QutritRestlessSimulator
