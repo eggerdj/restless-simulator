@@ -1,7 +1,7 @@
 """Qutrit Restless Simulator"""
 import uuid
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 import warnings
 
 import numpy as np
@@ -341,7 +341,7 @@ class QutritRestlessSimulator(BackendV2):
         return [SampleBuffer(t_mat, size=size) for t_mat in trans_mats]
 
     @classmethod
-    def _memory_to_counts(cls, memory: List[Union[int, str]]) -> Dict[str, int]:
+    def _memory_to_counts(cls, memory: Sequence[Union[int, str]]) -> Dict[str, int]:
         """Convert a list of single-shot states to a counts dictionary.
 
         Args:
@@ -362,7 +362,7 @@ class QutritRestlessSimulator(BackendV2):
         n_circuits: int,
         meas_assignment_mats: Optional[list_union_array] = None,
         meas_transition_mats: Optional[list_union_array] = None,
-    ) -> Tuple[list_union_array, list_union_array]:
+    ) -> Tuple[List[np.ndarray], List[np.ndarray]]:
         """Create validated lists of measurement assignment and transition matrices, or raise an
         error.
 
@@ -446,18 +446,17 @@ class QutritRestlessSimulator(BackendV2):
                 circ_metadata = {}
             header = QobjExperimentHeader(metadata=circ_metadata)
 
-            result_data = {}
             ## Add optional outputs depending on return_X options.
-
+            result_data: Dict[str, Any] = {}
             # return_post_meas_state
             if kwargs.get(
                 "return_post_meas_state", self.options.return_post_meas_state
             ):
-                result_data["post_meas_state"] = data.post_meas_state
+                result_data["post_meas_state"] = data.post_meas_states
 
             # return_meas_state
             if kwargs.get("return_post_meas_state", self.options.return_meas_state):
-                result_data["meas_state"] = data.meas_state
+                result_data["meas_state"] = data.meas_states
 
             # return_memory_labelled
             if kwargs.get(
@@ -491,7 +490,7 @@ class QutritRestlessSimulator(BackendV2):
 
     def _create_job(
         self,
-        circuit_data: List[Dict[str, Any]],
+        circuit_data: List[CircuitData],
         circuits: List[QuantumCircuit],
         cum_trans_mats: List[np.ndarray],
         **kwargs,
@@ -506,7 +505,7 @@ class QutritRestlessSimulator(BackendV2):
         job_id = str(uuid.uuid4())
         # `cum_trans_mats` is a result for the entire job and not an individual circuit, so we add
         # it to the restless job and not an experiment result.
-        job_kwargs = {
+        job_kwargs: Dict[str, Any] = {
             "job_id": job_id,
             # Default is None so we at least define the attribute in the result.
             "cum_trans_mats": None,
