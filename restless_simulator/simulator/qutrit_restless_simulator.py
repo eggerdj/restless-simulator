@@ -1,6 +1,7 @@
 """Qutrit Restless Simulator"""
 import uuid
 from typing import Dict, List, Optional, Union
+import warnings
 
 import numpy as np
 from qiskit import QuantumCircuit
@@ -12,13 +13,13 @@ from qiskit.quantum_info.operators.channel.quantum_channel import QuantumChannel
 from qiskit.result import Result
 from qiskit.result.models import ExperimentResult, ExperimentResultData
 from qiskit.transpiler import Target
-import warnings
 
 from restless_simulator.circuit import QutritQuantumChannelOperation, QutritUnitaryGate
 from .restless_job import RestlessJob
 from .sample_buffer import SampleBuffer
 
 
+# pylint: disable=too-few-public-methods
 class RestlessBackendConfiguration:
     """A backend configuration class for :class:`QutritRestlessSimulator`.
 
@@ -47,20 +48,20 @@ class RestlessBackendProperties:
 
     # TODO: Subclass `qiskit.providers.models.BackendProperties`
 
-    def __init__(self, T1=1) -> None:
+    def __init__(self, t1_time=1) -> None:
         """Create a restless backend properties instance.
 
         Args:
-            T1: The default T1 time for all qubits/qutrits, in seconds. Defaults to 1.
+            t1_time: The default T1 time for all qubits/qutrits, in seconds. Defaults to 1.
         """
-        self.T1 = T1
+        self.t1_time = t1_time
 
     # pylint: disable=unused-argument
     def qubit_property(self, physical_qubit, name: str = None):
         """Returns the property/properties for the given physical qubit.
 
         The most important qubit property to return is the T1 time, which is set as the same for all
-        qubits (i.e., :attr:`T1`).
+        qubits (i.e., :attr:`t1_time`).
 
         Args:
             physical_qubit: The physical qubit index.
@@ -70,7 +71,7 @@ class RestlessBackendProperties:
             Qubit property or a dictionary of properties if ``name=None``.
         """
         # TODO: Refactor this method to us BackendProperties as this method differs slightly.
-        return {"T1": [self.T1]}
+        return {"T1": [self.t1_time]}
 
 
 class QutritRestlessSimulator(BackendV2):
@@ -95,7 +96,7 @@ class QutritRestlessSimulator(BackendV2):
     @property
     def shots(self) -> int:
         """Return the shots used."""
-        return self._shots
+        return self.options.shots
 
     def _setup_target(self):
         """Setup a :class:`Target` instance for the simulator.
@@ -140,7 +141,8 @@ class QutritRestlessSimulator(BackendV2):
         Options:
             shots: The number of shots to simulate.
             meas_assignment_mat: The measurement assignment matrix to use for all circuits, if not
-                set when calling :meth:`run`. Defaults to perfect qubit measurement, where the first and second excited states are treated as one excited state.
+                set when calling :meth:`run`. Defaults to perfect qubit measurement, where the first
+                and second excited states are treated as one excited state.
             meas_transition_mat: The measurement transition matrix to use for all circuits, if not
                 set when calling :meth:`run`. Defaults to an ideal post-measurement process where
                 the   measurement state does not change.
@@ -205,8 +207,8 @@ class QutritRestlessSimulator(BackendV2):
             for inst in simplified_circ.data:
                 # QutritUnitaryGate
                 if isinstance(inst.operation, QutritUnitaryGate):
-                    op = inst.operation.as_operator()
-                    inst_channel = SuperOp(Kraus(op.data))
+                    operator = inst.operation.as_operator()
+                    inst_channel = SuperOp(Kraus(operator.data))
                     channel = inst_channel @ channel
                 # QutritQuantumChannelOperation
                 elif isinstance(inst.operation, QutritQuantumChannelOperation):
@@ -235,7 +237,8 @@ class QutritRestlessSimulator(BackendV2):
                     continue
                 else:
                     raise RuntimeError(
-                        f"{self.__class__.__name__} encountered unknown instruction of type {type(inst.operation).__name__}: {inst.operation}"
+                        f"{self.__class__.__name__} encountered unknown instruction of type "
+                        f"{type(inst.operation).__name__}: {inst.operation}"
                     )
             channels.append(channel)
         return channels
@@ -267,7 +270,7 @@ class QutritRestlessSimulator(BackendV2):
         """
         if in_channels is None and in_circs is None:
             raise QiskitError(
-                f"one of in_circs and in_channels must be set, but both are None."
+                "one of in_circs and in_channels must be set, but both are None."
             )
 
         if in_circs is not None and in_channels is not None:
@@ -325,8 +328,9 @@ class QutritRestlessSimulator(BackendV2):
         """
         unique_states, num_counts = np.unique(memory, return_counts=True)
 
-        return {state: count for state, count in zip(unique_states, num_counts)}
+        return dict(zip(unique_states, num_counts))
 
+    # pylint: disable=arguments-renamed
     def run(
         self,
         circuits: List[QuantumCircuit],
@@ -502,7 +506,7 @@ class QutritRestlessSimulator(BackendV2):
             if kwargs.get("return_trans_mat", self.options.return_trans_mat):
                 result_data["trans_mat"] = data["transition_matrix"]
             ##
-            
+
             ## Create experiment result instance
             exp_res = ExperimentResult(
                 shots=self.options.shots,
@@ -517,7 +521,7 @@ class QutritRestlessSimulator(BackendV2):
             experiment_results.append(exp_res)
             ##
         ##
-        
+
         ## Create RestlessJob
         job_id = str(uuid.uuid4())
         # cum_trans_mats is a result for the entire job and not an individual circuit, so we add it
@@ -534,7 +538,7 @@ class QutritRestlessSimulator(BackendV2):
             result=Result(
                 backend_name=self.name,
                 backend_version=self.backend_version,
-                qobj_id="RESTLESS_CIRCUIT", # Dummy qobj_id
+                qobj_id="RESTLESS_CIRCUIT",  # Dummy qobj_id
                 success=True,
                 results=experiment_results,
                 **job_kwargs,
