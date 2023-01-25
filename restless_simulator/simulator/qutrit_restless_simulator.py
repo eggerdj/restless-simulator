@@ -77,7 +77,7 @@ class RestlessBackendProperties:
 
 # pylint: disable=too-many-instance-attributes
 @dataclass
-class CircuitData:
+class RestlessCircuitData:
     """Class for storing circuit-specific results during restless execution."""
 
     memory: List[str] = field(default_factory=list)
@@ -457,7 +457,7 @@ class QutritRestlessSimulator(BackendV2):
 
     def _create_experiment_results(
         self,
-        circuit_data: List[CircuitData],
+        circuit_data: List[RestlessCircuitData],
         circuits: List[QuantumCircuit],
         **kwargs,
     ) -> List[ExperimentResult]:
@@ -518,7 +518,7 @@ class QutritRestlessSimulator(BackendV2):
 
     def _create_job(
         self,
-        circuit_data: List[CircuitData],
+        circuit_data: List[RestlessCircuitData],
         circuits: List[QuantumCircuit],
         cum_trans_mats: List[np.ndarray],
         **kwargs,
@@ -556,11 +556,11 @@ class QutritRestlessSimulator(BackendV2):
 
     def _initialize_circuit_data(
         self, circuits: List[QuantumCircuit]
-    ) -> List[CircuitData]:
+    ) -> List[RestlessCircuitData]:
         channels = self.compute_circuit_channel(in_circs=circuits)
         transition_matrices = self.compute_transition_matrices(in_channels=channels)
         circuit_data = [
-            CircuitData(
+            RestlessCircuitData(
                 metadata=circ.metadata, channel=channel, transition_matrix=trans_mat
             )
             for circ, channel, trans_mat in zip(circuits, channels, transition_matrices)
@@ -571,7 +571,7 @@ class QutritRestlessSimulator(BackendV2):
     def _simulate_single_shot(
         self,
         input_state: int,
-        circuit_data: CircuitData,
+        circuit_data: RestlessCircuitData,
         circuit_buffer: SampleBuffer,
         meas_assign_buffer: SampleBuffer,
         post_meas_buffer: SampleBuffer,
@@ -588,7 +588,8 @@ class QutritRestlessSimulator(BackendV2):
 
         Args:
             input_state: The input state to use when sampling from the circuit buffer.
-            circuit_data: The :class:`CircuitData` instance for the circuit being simulated/sampled.
+            circuit_data: The :class:`RestlessCircuitData` instance for the circuit being
+                simulated/sampled.
             circuit_buffer: The circuit's corresponding collapsed measurement state buffer.
             meas_assign_buffer: The circuit's corresponding measurement outcome buffer.
             post_meas_buffer: The circuit's corresponding post-measurement state buffer.
@@ -643,8 +644,8 @@ class QutritRestlessSimulator(BackendV2):
         """
 
         ## Create circuit sample buffers and circuit_data list.
-        # `circuit_data` is a list of CircuitData instances which contain restless results for each
-        # circuit.
+        # `circuit_data` is a list of RestlessCircuitData instances which contain restless results
+        # for each circuit.
         circuit_data = self._initialize_circuit_data(circuits)
 
         # `circuit_buffers` is a list of sample buffers for the collapsed measurement states of each
