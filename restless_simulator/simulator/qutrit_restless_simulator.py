@@ -34,8 +34,8 @@ class RestlessBackendConfiguration:
         """Creates a restless simulator backend configuration.
 
         Args:
-            rep_delay_range: Possible repetition delays for restless execution. Defaults to (0,
-                100e-3).
+            rep_delay_range: Possible repetition delays for restless execution in :math:`\\mu{}s`.
+                Defaults to (0, 100e-3).
         """
         self.rep_delay_range = rep_delay_range
 
@@ -100,6 +100,7 @@ class CircuitData:
 
 class QutritRestlessSimulator(BackendV2):
     """A simulator of restless measurements with qutrits."""
+    # TODO: write detailed class docstring.
 
     def __init__(self, shots: int = 2048, **kwargs):
         """
@@ -205,13 +206,13 @@ class QutritRestlessSimulator(BackendV2):
         """Computes the quantum channels for each circuit.
 
         Compatible Circuit Instructions:
-            *. :class:`QutritUnitaryGate`: a qutrit gate represented as a unitary operation.
-            *. :class:`QutritQuantumChannelOperation`: a qutrit quantum channel, which is converted
-               into a SuperOp when used.
-            *. Any operation that has a `to_matrix()` method, as long as the returned NumPy array is
-               sa 2x2 or 3x3 matrix.
-            *. Measurements, which are ignored if the ``ignore_measurement_instructions`` option is
-               True. If False, an error is raised.
+            * :class:`QutritUnitaryGate`: a qutrit gate represented as a unitary operation.
+            * :class:`QutritQuantumChannelOperation`: a qutrit quantum channel, which is converted
+              into a SuperOp when used.
+            * Any operation that has a ``to_matrix()`` method, as long as the returned NumPy array
+              is sa 2x2 or 3x3 matrix.
+            * Measurements, which are ignored if the ``ignore_measurement_instructions`` option is
+              True. If False, an error is raised.
 
         Args:
             in_circs: List of circuits.
@@ -248,6 +249,7 @@ class QutritRestlessSimulator(BackendV2):
                         qutrit_mat[0:2, 0:2] = mat
                         inst_channel = SuperOp(Kraus(qutrit_mat))
                     else:
+                        # TODO Handle matrix embedding in a larger space here.
                         raise RuntimeError(
                             f"{type(self).__name__} encountered an instruction with a "
                             "'to_matrix()' method but the shape of the matrix is not supported: "
@@ -272,7 +274,21 @@ class QutritRestlessSimulator(BackendV2):
         in_circs: Optional[List[QuantumCircuit]] = None,
         in_channels: Optional[List[QuantumChannel]] = None,
     ) -> List[np.ndarray]:
-        """Computes transition matrices for circuits or channels.
+        r"""Computes transition matrices for circuits or channels.
+
+        Each transition matrix contains the probability :math:`p_j` to get the collapsed measurement
+        state :math:`\ket{j}` if the input state to the circuit is :math:`\ket{i}`. These are
+        computed by sampling from ``in_channels`` (which can be computed from ``in_circs``). To
+        determine the output probabilities :math:`\{p_j\}_{j=0}^2` for a given input state
+        :math:`\ket{i}` using a transition matrix :math:`T_k`, the following operation is carried
+        out
+
+        .. math::
+
+            \vec{O} = (p_0,p_1,p_2)^T = T_k\vec{I}
+
+        where :math:`\vec{I} = (a_0,a_1,a_2)^T` is the input state subject to :math:`a_i = 1` and
+        :math:`a_{k\neq{}i} = 0`.
 
         .. warning:
             This code currently only supports one qutrit. Eventually this will be extended to
@@ -330,6 +346,18 @@ class QutritRestlessSimulator(BackendV2):
         self, trans_mats: List[np.ndarray], size: int = 1024
     ) -> List[SampleBuffer]:
         """Create a list of sample buffers from transition matrices.
+
+        Each sample buffer contains presampled outcomes for the given transition matrices, to assist
+        with speeding up simulation of circuits. Sample buffers reduce the number of calls to
+        :func:`numpy.random.choice`, which is costly when simulating multiple circuits with at least
+        1000 shots.
+
+        :class:`SampleBuffer` samples a transition matrix (``trans_mats``) with :math:`3n` calls to
+        :func:`numpy.random.choice`, where :math:`n` is the number of qutrits. In each call,
+        ``size`` many samples are taken. Without a sample buffer, there would be one matrix
+        multiplication step and one call to :func:`numpy.random.choice` per sample of a given
+        transition matrix. For more detail on how the sample buffers are implemented, see the
+        documentation for :class:`SampleBuffer`.
 
         Args:
             trans_mats: List of transition matrices.

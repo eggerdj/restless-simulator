@@ -37,6 +37,16 @@ class SampleBuffer:
         for _ in range(n_shots):
             prev_state = samples.get_label(prev_state)
             measurements.append(prev_state)
+
+    Using a sample buffer reduces the cost of sampling from a transition matrix by computing the
+    output probabilities for an input state **once** (i.e., computing :math:`T_k\\vec{I}`) and
+    merging multiple calls to :math:`numpy.random.choice`. Calling :func:`numpy.random.choice`
+    incurs an overhead cost which can negatively affect the performance of the simulator. The impact
+    of this cost is mitigated by sampling more outcomes in each call to :func:`numpy.random.choice`
+    (i.e., with ``numpy.random.choice(size=X)`` for :math:`X>1`) and storing the results in a
+    :class:`deque`. This averages the overhead over :math:`X` samples. Managing this :class:`deque`
+    and refilling it when it reaches a given minimum is the responsibility of the
+    :class:`SampleBuffer` class.
     """
 
     def __init__(
