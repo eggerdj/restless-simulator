@@ -1,6 +1,6 @@
 """Qutrit Restless Simulator"""
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 import warnings
 
@@ -80,17 +80,17 @@ class RestlessBackendProperties:
 class CircuitData:
     """Class for storing circuit-specific results during restless execution."""
 
-    memory: List[str] = []
+    memory: List[str] = field(default_factory=list)
     """Hex. representation of measurement outcomes."""
-    memory_labelled: List[int] = []
+    memory_labelled: List[int] = field(default_factory=list)
     """int representation of measurement outcomes."""
-    meas_states: List[int] = []
+    meas_states: List[int] = field(default_factory=list)
     """Collapsed measurement states."""
-    post_meas_states: List[int] = []
+    post_meas_states: List[int] = field(default_factory=list)
     """Post measurement states."""
-    input_states: List[int] = []
+    input_states: List[int] = field(default_factory=list)
     """Input states."""
-    metadata: Dict[str, Any] = {}
+    metadata: Dict[str, Any] = field(default_factory=dict)
     """Circuit metadata"""
     channel: QuantumChannel = None
     """Circuit's corresponding quantum channel."""
