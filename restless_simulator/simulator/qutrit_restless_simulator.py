@@ -100,6 +100,7 @@ class RestlessCircuitData:
 
 class QutritRestlessSimulator(BackendV2):
     """A simulator of restless measurements with qutrits."""
+
     # TODO: write detailed class docstring.
 
     def __init__(self, shots: int = 2048, **kwargs):
