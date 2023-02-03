@@ -423,6 +423,12 @@ class QutritRestlessSimulator(BackendV2):
             ``meas_transition_mats`` respectively.
         """
         ## Check input arguments
+        # Set defaults for `meas_assignment_mats` and `meas_transition_mats` if necessary.
+        if meas_assignment_mats is None:
+            meas_assignment_mats = self.options.meas_assignment_mat
+        if meas_transition_mats is None:
+            meas_transition_mats = self.options.meas_transition_mat
+
         # Handle single array for all circuits for `meas_assignment_mats` and `meas_transition_mats`
         if isinstance(
             meas_assignment_mats, np.ndarray
@@ -437,22 +443,17 @@ class QutritRestlessSimulator(BackendV2):
             meas_transition_mats = [meas_transition_mats] * n_circuits
 
         # Check lengths of `meas_assignment_mats` and `meas_transition_mats`.
-        if meas_assignment_mats is not None and len(meas_assignment_mats) != n_circuits:
+        if len(meas_assignment_mats) != n_circuits:
             raise AttributeError(
                 "Length of meas_assignment_mats doesn't match length of circuits: expected "
                 f"{n_circuits} entries but got {len(meas_assignment_mats)}."
             )
-        if meas_transition_mats is not None and len(meas_transition_mats) != n_circuits:
+        if len(meas_transition_mats) != n_circuits:
             raise AttributeError(
                 "Length of meas_transition_mats doesn't match length of circuits: expected "
                 f"{n_circuits} entries but got {len(meas_transition_mats)}."
             )
 
-        # Set defaults for `meas_assignment_mats` and `meas_transition_mats` if necessary.
-        if not meas_assignment_mats is None:
-            meas_assignment_mats = [self.options.meas_assignment_mat] * n_circuits
-        if not meas_transition_mats is None:
-            meas_transition_mats = [self.options.meas_transition_mat] * n_circuits
         ##
         return (meas_assignment_mats, meas_transition_mats)
 
@@ -484,7 +485,7 @@ class QutritRestlessSimulator(BackendV2):
                 result_data["post_meas_state"] = data.post_meas_states
 
             # return_meas_state
-            if kwargs.get("return_post_meas_state", self.options.return_meas_state):
+            if kwargs.get("return_meas_state", self.options.return_meas_state):
                 result_data["meas_state"] = data.meas_states
 
             # return_memory_labelled
