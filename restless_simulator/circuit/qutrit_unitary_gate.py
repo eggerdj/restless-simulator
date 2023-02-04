@@ -129,8 +129,8 @@ class QutritUnitaryGate(Gate):
     ) -> "QutritUnitaryGate":
         r"""Create a qutrit gate from the provided qubit gate.
 
-        This function creates a qutrit unitary gate for a unitary :math:`U` with the following
-        structure
+        This function creates a qutrit unitary gate for a unitary :math:`U`. For example, a
+        single-qubit unitary is embedded in the following structure
 
         .. math::
             \begin{bmatrix}
@@ -143,11 +143,6 @@ class QutritUnitaryGate(Gate):
         column. If the input gate is not unitary, an error will be thrown as the resulting qutrit
         gate will be non-unitary.
 
-        .. warning::
-
-            This method currently only supports single-qubit gates. Extending this to two or more
-            qubits is a goal of the project.
-
         Args:
             qubit_gate: The qubit gate to convert into a qutrit gate.
             label: Optional label for the new qutrit gate. Defaults to None.
@@ -159,13 +154,37 @@ class QutritUnitaryGate(Gate):
         Returns:
             QutritUnitaryGate: a qutrit gate equivalent to the input qubit gate.
         """
-        # TODO: Extend this method to support multi-qubit gates and multi-qutrit gates.
         qubit_unitary = qubit_gate.to_matrix()
-        if qubit_unitary.shape != (2, 2):
+
+        num_qubits = np.log2(qubit_unitary.shape[0])
+
+        if not num_qubits.is_integer() or qubit_unitary.shape != (2**num_qubits, 2**num_qubits):
             raise QiskitError(
-                f"Gate is not a qubit operation as it has dimensions {qubit_unitary.shape}."
+                f"Gate is not a qubit operation, it has dimensions {qubit_unitary.shape}."
             )
-        qutrit_unitary = np.eye(3, dtype=complex)
-        qutrit_unitary[0:2, 0:2] = qubit_unitary
+
+        qutrit_unitary = np.eye(3 ** int(num_qubits), dtype=complex)
+
+        for idx_row in range(qubit_unitary.shape[0]):
+
+            qti_row = convert_basis_index(idx_row)
+            for idx_col in range(qubit_unitary.shape[1]):
+                qti_col = convert_basis_index(idx_col)
+
+                qutrit_unitary[qti_row, qti_col] = qubit_unitary[idx_row, idx_col]
 
         return cls(qutrit_unitary, qubit_gate.label if label is None else label)
+
+
+def convert_basis_index(index: int, basis: int = 3) -> int:
+    """Convert the ``index`` from basis-two (qubit) to basis-``basis`` (qudit).
+
+    Args:
+        index: The index corresponding to a position in a qubit-based unitary.
+        basis: The dimension of the new sub-system.
+
+    Returns:
+        The index now mapped to the index position in a unitary matrix whose elements
+        have dimension ``basis``.
+    """
+    return sum(int(bit) * basis ** pos for pos, bit in enumerate(bin(index)[2:][::-1]))

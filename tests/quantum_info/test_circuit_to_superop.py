@@ -11,8 +11,10 @@
 
 """Tests for qutrit based circuit to SuperOp conversion."""
 
+import numpy as np
+
 from qiskit.circuit import QuantumCircuit
-from qiskit.circuit.library import RXGate
+from qiskit.circuit.library import RXGate, RZZGate
 
 from unittest import TestCase
 
@@ -34,4 +36,16 @@ class TestCircuitToSuperOp(TestCase):
         super_op = qudit_circuit_to_super_op(circuit)
 
         self.assertEqual(super_op.dim, (27, 27))
-        self.assertEqual(super_op.output_dims, (3, 3, 3))
+        self.assertEqual(super_op.output_dims(), (3, 3, 3))
+
+    def test_convert_with_two_qubit_gate(self):
+        """Test the conversion with a circuit that has a two-qubit gate."""
+
+        qt_rx = QutritUnitaryGate.from_qubit_gate(RXGate(0.5 * np.pi, label="rx"))
+        qt_rzz = QutritUnitaryGate.from_qubit_gate(RZZGate(0.5 * np.pi, label="rzz"))
+
+        circuit = QuantumCircuit(2)
+        circuit.append(qt_rx, (0,))
+        circuit.append(qt_rzz, (0, 1))
+
+        super_op = qudit_circuit_to_super_op(circuit)

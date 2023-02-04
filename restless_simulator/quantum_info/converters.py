@@ -11,6 +11,8 @@
 
 """Convert qudit-based circuits to a SuperOp."""
 
+import numpy as np
+
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import SuperOp
 
@@ -24,6 +26,9 @@ def qudit_circuit_to_super_op(circuit: QuantumCircuit, dim: int = 3) -> SuperOp:
     Args:
         circuit: The quantum circuit to convert to a SuperOp instance.
         dim: The dimension of the wires in the quantum circuit.
+
+    Returns:
+        A super operator in which all sub-systems have dimension ``dim``.
     """
     instruction = circuit.to_instruction()
 
