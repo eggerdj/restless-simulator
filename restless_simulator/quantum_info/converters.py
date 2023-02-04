@@ -15,26 +15,32 @@ import numpy as np
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import SuperOp
+from qiskit.quantum_info.operators.channel.transformations import _kraus_to_superop
 
 
-def qudit_circuit_to_super_op(circuit: QuantumCircuit, dim: int = 3) -> SuperOp:
-    """Convert a QuantumCircuit or Instruction to a SuperOp.
+def qudit_circuit_to_super_op(circuit: QuantumCircuit, basis: int = 3) -> SuperOp:
+    """Convert a QuantumCircuit or Instruction to a SuperOp."""
 
-    The instructions in the quantum circuit need to support a ``to_matrix`` method
-    that results in matrices of the correct dimension.
+    n_sys = circuit.num_qubits
+    full_op = SuperOp(
+        np.eye((basis**2) ** n_sys),
+        input_dims=(basis,) * n_sys,
+        output_dims=(basis,) * n_sys,
+    )
 
-    Args:
-        circuit: The quantum circuit to convert to a SuperOp instance.
-        dim: The dimension of the wires in the quantum circuit.
+    qreg = circuit.qregs[0]  # Qubit register
+    for instruction in circuit.data:
+        # 1) get qargs, i.e. wires on which the instruction applies.
+        qargs = [qreg.index(qubit) for qubit in instruction.qubits]
 
-    Returns:
-        A super operator in which all sub-systems have dimension ``dim``.
-    """
-    instruction = circuit.to_instruction()
+        # 2) Create a super op for this instruction
+        op2 = SuperOp(
+            _kraus_to_superop(([instruction.operation.to_matrix()], None)),
+            input_dims=(basis,) * len(qargs),
+            output_dims=(basis,) * len(qargs),
+        )
 
-    n_sys = instruction.num_qubits
-    dims = (dim, ) * n_sys
-    op = SuperOp(np.eye((dim * dim)**n_sys), input_dims=dims, output_dims=dims)
-    op._append_instruction(instruction)
+        # 3) Compose the op on the existing one taking the position into account
+        full_op.compose(op2, qargs)
 
-    return op
+    return full_op

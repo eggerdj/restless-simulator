@@ -156,9 +156,12 @@ class QutritUnitaryGate(Gate):
         """
         qubit_unitary = qubit_gate.to_matrix()
 
-        num_qubits = np.log2(qubit_unitary.shape[0])
+        num_qubits = float(np.log2(qubit_unitary.shape[0]))
 
-        if not num_qubits.is_integer() or qubit_unitary.shape != (2**num_qubits, 2**num_qubits):
+        if not num_qubits.is_integer() or qubit_unitary.shape != (
+            2**num_qubits,
+            2**num_qubits,
+        ):
             raise QiskitError(
                 f"Gate is not a qubit operation, it has dimensions {qubit_unitary.shape}."
             )
@@ -187,4 +190,4 @@ def convert_basis_index(index: int, basis: int = 3) -> int:
         The index now mapped to the index position in a unitary matrix whose elements
         have dimension ``basis``.
     """
-    return sum(int(bit) * basis ** pos for pos, bit in enumerate(bin(index)[2:][::-1]))
+    return sum(int(bit) * basis**pos for pos, bit in enumerate(bin(index)[2:][::-1]))

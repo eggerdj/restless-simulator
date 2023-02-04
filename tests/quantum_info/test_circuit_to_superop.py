@@ -44,8 +44,11 @@ class TestCircuitToSuperOp(TestCase):
         qt_rx = QutritUnitaryGate.from_qubit_gate(RXGate(0.5 * np.pi, label="rx"))
         qt_rzz = QutritUnitaryGate.from_qubit_gate(RZZGate(0.5 * np.pi, label="rzz"))
 
-        circuit = QuantumCircuit(2)
+        circuit = QuantumCircuit(3)
         circuit.append(qt_rx, (0,))
-        circuit.append(qt_rzz, (0, 1))
+        circuit.append(qt_rzz, (0, 2))
 
         super_op = qudit_circuit_to_super_op(circuit)
+
+        self.assertEqual(super_op.dim, (27, 27))
+        self.assertEqual(super_op.output_dims(), (3, 3, 3))
