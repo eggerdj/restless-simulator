@@ -41,6 +41,6 @@ def qudit_circuit_to_super_op(circuit: QuantumCircuit, basis: int = 3) -> SuperO
         )
 
         # 3) Compose the op on the existing one taking the position into account
-        full_op.compose(op2, qargs)
+        full_op = full_op.compose(op2, qargs)
 
     return full_op

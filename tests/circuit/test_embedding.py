@@ -14,10 +14,13 @@
 from unittest import TestCase
 import numpy as np
 
-from qiskit.circuit.library import RZZGate
+from qiskit.circuit import QuantumCircuit
+from qiskit.circuit.library import RXGate, RYGate, RZZGate, CPhaseGate
+from qiskit import quantum_info as qi
 
 from restless_simulator.circuit import QutritUnitaryGate
 from restless_simulator.circuit.qutrit_unitary_gate import convert_basis_index
+from restless_simulator.quantum_info.converters import qudit_circuit_to_super_op
 
 
 class TestEmbedding(TestCase):
@@ -43,3 +46,41 @@ class TestEmbedding(TestCase):
         ideal_diag = [-1.0j, 1.0j, 1.0, 1.0j, -1.0j, 1.0, 1.0, 1.0, 1.0]
 
         self.assertTrue(np.allclose(np.diag(qutrit_mat), ideal_diag))
+
+    def test_correct_evolution(self):
+        """A test of a specific instance."""
+
+        qt_ry = QutritUnitaryGate.from_qubit_gate(RYGate(0.5 * np.pi, label="ry"))
+        qt_rx = QutritUnitaryGate.from_qubit_gate(RXGate(np.pi, label="rx"))
+        qt_rzz = QutritUnitaryGate.from_qubit_gate(CPhaseGate(np.pi, label="cp"))
+
+        circuit = QuantumCircuit(2)
+        circuit.append(qt_ry, (0,))
+        circuit.append(qt_rx, (1,))
+        circuit.append(qt_rzz, (0, 1))
+
+        sop = qudit_circuit_to_super_op(circuit)
+
+        # Create |0><0|
+        data = np.zeros((9, 9))
+        data[0, 0] = 1
+        rho_in = qi.DensityMatrix(data)
+
+        # Evolve with sop to get |10> - |11>
+        rho_out = rho_in.evolve(sop).data
+
+        sub_rho_out = np.array(
+            [
+                [rho_out[3, 3], rho_out[3, 4]],
+                [rho_out[4, 3], rho_out[4, 4]],
+             ]
+        )
+
+        expected = np.array(
+            [
+                [0.5, -0.5],
+                [-0.5, 0.5],
+            ]
+        )
+
+        self.assertTrue(np.allclose(sub_rho_out, expected))
