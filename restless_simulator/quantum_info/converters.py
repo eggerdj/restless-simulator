@@ -32,7 +32,9 @@ def qudit_circuit_to_super_op(circuit: QuantumCircuit, basis: int = 3) -> SuperO
             only three levels are supported.
     """
     if basis != 3:
-        raise NotImplementedError(f"Basis other than three are not supported. Got {basis}.")
+        raise NotImplementedError(
+            f"Basis other than three are not supported. Got {basis}."
+        )
 
     n_sys = circuit.num_qubits
     full_op = SuperOp(

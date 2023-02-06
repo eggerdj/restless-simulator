@@ -73,7 +73,7 @@ class TestEmbedding(TestCase):
             [
                 [rho_out[3, 3], rho_out[3, 4]],
                 [rho_out[4, 3], rho_out[4, 4]],
-             ]
+            ]
         )
 
         expected = np.array(
