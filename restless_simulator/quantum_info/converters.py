@@ -9,7 +9,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Convert qudit-based circuits to a SuperOp."""
+"""Convert qutrit-based circuits to a SuperOp."""
 
 import numpy as np
 
@@ -17,9 +17,22 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import SuperOp
 from qiskit.quantum_info.operators.channel.transformations import _kraus_to_superop
 
+from restless_simulator.circuit import QutritQuantumChannelOperation, QutritUnitaryGate
+
 
 def qudit_circuit_to_super_op(circuit: QuantumCircuit, basis: int = 3) -> SuperOp:
-    """Convert a QuantumCircuit or Instruction to a SuperOp."""
+    """Convert a QuantumCircuit or Instruction to a SuperOp.
+
+    Note that this converter currently only supports qutrit instructions. Future
+    work may generalize the qutrit instructions to qudit instructions.
+
+    Args:
+        circuit: The quantum circuit to convert to a super operator.
+        basis: The number of levels in the wires of the quantum circuit. Note that currently
+            only three levels are supported.
+    """
+    if basis != 3:
+        raise NotImplementedError(f"Basis other than three are not supported. Got {basis}.")
 
     n_sys = circuit.num_qubits
     full_op = SuperOp(
@@ -33,12 +46,23 @@ def qudit_circuit_to_super_op(circuit: QuantumCircuit, basis: int = 3) -> SuperO
         # 1) get qargs, i.e. wires on which the instruction applies.
         qargs = [qreg.index(qubit) for qubit in instruction.qubits]
 
-        # 2) Create a super op for this instruction
-        op2 = SuperOp(
-            _kraus_to_superop(([instruction.operation.to_matrix()], None)),
-            input_dims=(basis,) * len(qargs),
-            output_dims=(basis,) * len(qargs),
-        )
+        if isinstance(instruction.operation, QutritUnitaryGate):
+            # 2) Create a super op for QutritUnitaryGate
+            op2 = SuperOp(
+                _kraus_to_superop(([instruction.operation.to_matrix()], None)),
+                input_dims=(basis,) * len(qargs),
+                output_dims=(basis,) * len(qargs),
+            )
+
+        elif isinstance(instruction.operation, QutritQuantumChannelOperation):
+            # 2) Create a super op for qudit channels
+            op2 = instruction.operation.channel
+
+        else:
+            raise NotImplementedError(
+                f"Only {QutritUnitaryGate.__name__} and {QutritQuantumChannelOperation.__name__}"
+                " instructions are supported."
+            )
 
         # 3) Compose the op on the existing one taking the position into account
         full_op = full_op.compose(op2, qargs)
