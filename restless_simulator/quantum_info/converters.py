@@ -21,7 +21,8 @@ from restless_simulator.circuit import QutritQuantumChannelOperation, QutritUnit
 
 
 def qudit_circuit_to_super_op(circuit: QuantumCircuit, basis: int = 3) -> SuperOp:
-    """Convert a QuantumCircuit or Instruction to a SuperOp.
+    """Convert a QuantumCircuit to a SuperOp.
+
 
     Note that this converter currently only supports qutrit instructions. Future
     work may generalize the qutrit instructions to qudit instructions.
