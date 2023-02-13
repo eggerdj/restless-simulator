@@ -9,7 +9,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Convert qutrit-based circuits to a SuperOp."""
+"""Convert qudit-based circuits to a SuperOp."""
 
 import numpy as np
 
