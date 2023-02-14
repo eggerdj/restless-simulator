@@ -38,3 +38,4 @@ Qutrit Quantum Error Channels
 
 from .channels import amplitude_damping_channel, depolarizing_channel
 from .operator import Operator
+from .converters import qudit_circuit_to_super_op
