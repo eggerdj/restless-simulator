@@ -1,4 +1,16 @@
+# This code is a Qiskit project.
+
+# (C) Copyright IBM 2023.
+
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
 """Qutrit Restless Simulator"""
+
 import uuid
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
@@ -9,13 +21,17 @@ from qiskit import QuantumCircuit
 from qiskit.exceptions import QiskitError
 from qiskit.providers import BackendV2, Options
 from qiskit.qobj import QobjExperimentHeader
-from qiskit.quantum_info import DensityMatrix, Kraus, SuperOp
+from qiskit.quantum_info import DensityMatrix, Kraus
 from qiskit.quantum_info.operators.channel.quantum_channel import QuantumChannel
 from qiskit.result import Result
 from qiskit.result.models import ExperimentResult, ExperimentResultData
 from qiskit.transpiler import Target
 
 from restless_simulator.circuit import QutritQuantumChannelOperation, QutritUnitaryGate
+from restless_simulator.quantum_info.converters import (
+    qudit_circuit_to_super_op,
+    circuit_to_qudit_circuit,
+)
 from .restless_job import RestlessJob
 from .sample_buffer import SampleBuffer
 
@@ -201,8 +217,9 @@ class QutritRestlessSimulator(BackendV2):
         )
         return opts
 
+    @staticmethod
     def compute_circuit_channel(
-        self, in_circs: List[QuantumCircuit]
+        in_circuits: List[QuantumCircuit],
     ) -> List[QuantumChannel]:
         """Computes the quantum channels for each circuit.
 
@@ -216,7 +233,7 @@ class QutritRestlessSimulator(BackendV2):
               True. If False, an error is raised.
 
         Args:
-            in_circs: List of circuits.
+            in_circuits: List of circuits.
 
         Raises:
             RuntimeError: if an incompatible circuit instruction is encountered.
@@ -225,49 +242,14 @@ class QutritRestlessSimulator(BackendV2):
             A list of quantum channels corresponding to ``in_circs``.
         """
         channels = []
-        for circ in in_circs:
-            # Decompose in-case we have nested circuits
-            simplified_circ = circ.decompose()
-            # Create initial identity channel
-            channel = SuperOp(np.eye(9).astype(np.float128))
-            for inst in simplified_circ.data:
-                # QutritUnitaryGate
-                if isinstance(inst.operation, QutritUnitaryGate):
-                    operator = inst.operation.as_operator()
-                    inst_channel = SuperOp(Kraus(operator.data))
-                    channel = inst_channel @ channel
-                # QutritQuantumChannelOperation
-                elif isinstance(inst.operation, QutritQuantumChannelOperation):
-                    inst_channel = inst.operation.channel
-                    channel = SuperOp(inst_channel) @ channel
-                # If operation has a `to_matrix()` method
-                elif hasattr(inst.operation, "to_matrix"):
-                    mat = inst.operation.to_matrix()
-                    if mat.shape == (3, 3):
-                        inst_channel = SuperOp(Kraus(mat))
-                    elif mat.shape == (2, 2):
-                        qutrit_mat = np.eye(3, dtype=complex)
-                        qutrit_mat[0:2, 0:2] = mat
-                        inst_channel = SuperOp(Kraus(qutrit_mat))
-                    else:
-                        # TODO Handle matrix embedding in a larger space here.
-                        raise RuntimeError(
-                            f"{type(self).__name__} encountered an instruction with a "
-                            "'to_matrix()' method but the shape of the matrix is not supported: "
-                            f"expected (3,3) or (2,2) but got {mat.shape}."
-                        )
-                    channel = inst_channel @ channel
-                elif (
-                    inst.operation.name == "measure"
-                    and self.options.ignore_measurement_instructions
-                ):
-                    continue
-                else:
-                    raise RuntimeError(
-                        f"{self.__class__.__name__} encountered unknown instruction of type "
-                        f"{type(inst.operation).__name__}: {inst.operation}"
-                    )
-            channels.append(channel)
+
+        for circuit in in_circuits:
+            # remove final measurements
+            circuit_ = circuit.remove_final_measurements(inplace=False)
+
+            qudit_circuit = circuit_to_qudit_circuit(circuit_)
+            channels.append(qudit_circuit_to_super_op(qudit_circuit))
+
         return channels
 
     def compute_transition_matrices(
@@ -320,7 +302,7 @@ class QutritRestlessSimulator(BackendV2):
             )
 
         if in_channels is None:
-            in_channels = self.compute_circuit_channel(in_circs=in_circs)
+            in_channels = self.compute_circuit_channel(in_circuits=in_circs)
 
         transition_matrices = []
 
@@ -558,7 +540,7 @@ class QutritRestlessSimulator(BackendV2):
     def _initialize_circuit_data(
         self, circuits: List[QuantumCircuit]
     ) -> List[RestlessCircuitData]:
-        channels = self.compute_circuit_channel(in_circs=circuits)
+        channels = self.compute_circuit_channel(in_circuits=circuits)
         transition_matrices = self.compute_transition_matrices(in_channels=channels)
         circuit_data = [
             RestlessCircuitData(

@@ -20,7 +20,10 @@ from qiskit import quantum_info as qi
 
 from restless_simulator.circuit import QutritUnitaryGate
 from restless_simulator.circuit.qutrit_unitary_gate import convert_basis_index
-from restless_simulator.quantum_info.converters import qudit_circuit_to_super_op
+from restless_simulator.quantum_info.converters import (
+    qudit_circuit_to_super_op,
+    circuit_to_qudit_circuit,
+)
 
 
 class TestEmbedding(TestCase):
@@ -84,3 +87,25 @@ class TestEmbedding(TestCase):
         )
 
         self.assertTrue(np.allclose(sub_rho_out, expected))
+
+    def test_conversion(self):
+        """Test that the circuit to qudit circuit conversion gives the same as a manual build."""
+
+        # Automatic conversion
+        circuit1 = QuantumCircuit(2)
+        circuit1.ry(0.5 * np.pi, 0)
+        circuit1.rx(np.pi, 1)
+        circuit1.cp(np.pi, 0, 1)
+        circuit1 = circuit_to_qudit_circuit(circuit1)
+
+        # Manual construction
+        qt_ry = QutritUnitaryGate.from_qubit_gate(RYGate(0.5 * np.pi, label="ry"))
+        qt_rx = QutritUnitaryGate.from_qubit_gate(RXGate(np.pi, label="rx"))
+        qt_rzz = QutritUnitaryGate.from_qubit_gate(CPhaseGate(np.pi, label="cp"))
+
+        circuit2 = QuantumCircuit(2)
+        circuit2.append(qt_ry, (0,))
+        circuit2.append(qt_rx, (1,))
+        circuit2.append(qt_rzz, (0, 1))
+
+        self.assertTrue(circuit1 == circuit2)

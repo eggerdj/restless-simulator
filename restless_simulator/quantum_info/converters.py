@@ -13,7 +13,7 @@
 
 import numpy as np
 
-from qiskit.circuit import QuantumCircuit
+from qiskit.circuit import QuantumCircuit, Gate
 from qiskit.quantum_info import SuperOp
 from qiskit.quantum_info.operators.channel.transformations import _kraus_to_superop
 
@@ -71,3 +71,38 @@ def qudit_circuit_to_super_op(circuit: QuantumCircuit, basis: int = 3) -> SuperO
         full_op = full_op.compose(op2, qargs)
 
     return full_op
+
+
+def circuit_to_qudit_circuit(
+    circuit: QuantumCircuit, inplace: bool = False
+) -> QuantumCircuit:
+    """Return a circuit where all instructions are embedded in a larger space.
+
+    This function converts a qubit-based circuit to one where all instructions are embedded
+    in a larger hilbert space. This is intended for simulation purposes, i.e., the new
+    instructions have a to-matrix method that can be used by ``qudit_circuit_to_super_op``.
+
+    Args:
+        circuit: The circuit to convert.
+        inplace: If true then the given ``circuit`` is modified inplace. If false a modified
+            copy of the circuit is returned.
+
+    Returns:
+        A quantum circuit where all ``Gate`` instructions have been embedded in a larger space.
+    """
+    new_circuit = circuit if inplace else circuit.copy()
+
+    for idx, inst in enumerate(new_circuit.data):
+        if isinstance(inst.operation, Gate):
+            new_circuit.data[idx].operation = QutritUnitaryGate.from_qubit_gate(
+                inst.operation,
+                label=inst.operation.name,
+            )
+        elif isinstance(inst.operation, QutritUnitaryGate):
+            continue
+        else:
+            raise NotImplementedError(
+                f"Can only convert instances of Gate to {QutritUnitaryGate.__name__}."
+            )
+
+    return new_circuit
