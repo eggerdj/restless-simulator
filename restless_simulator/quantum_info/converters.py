@@ -98,7 +98,9 @@ def circuit_to_qudit_circuit(
                 inst.operation,
                 label=inst.operation.name,
             )
-        elif isinstance(inst.operation, (QutritUnitaryGate, QutritQuantumChannelOperation)):
+        elif isinstance(
+            inst.operation, (QutritUnitaryGate, QutritQuantumChannelOperation)
+        ):
             continue
         else:
             raise NotImplementedError(
