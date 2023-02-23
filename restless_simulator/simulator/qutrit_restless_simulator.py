@@ -606,9 +606,8 @@ class QutritRestlessSimulator(BackendV2):
         ]
         return circuit_data
 
-    # pylint: disable=too-many-arguments
+    @staticmethod
     def _simulate_single_shot(
-        self,
         input_state: int,
         circuit_data: RestlessCircuitData,
         circuit_buffer: SampleBuffer,
@@ -685,6 +684,8 @@ class QutritRestlessSimulator(BackendV2):
         Returns:
             A job with the results of simulating all circuits in a restless manner.
         """
+        self.set_options(**kwargs)
+
         if isinstance(circuits, QuantumCircuit):
             circuits = [circuits]
 
