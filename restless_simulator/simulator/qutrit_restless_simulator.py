@@ -486,7 +486,14 @@ class QutritRestlessSimulator(BackendV2):
                 circ_metadata = circ.metadata
             else:
                 circ_metadata = {}
-            header = QobjExperimentHeader(metadata=circ_metadata)
+
+            n_wires = len(circuits[0].qregs[0])
+            header = QobjExperimentHeader(
+                metadata=circ_metadata,
+                n_qubits=n_wires,
+                memory_slots=n_wires,
+                creg_sizes=[["meas", n_wires]],
+            )
 
             ## Add optional outputs depending on return_X options.
             result_data: Dict[str, Any] = {}
