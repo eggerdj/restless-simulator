@@ -133,7 +133,7 @@ class QutritRestlessSimulator(BackendV2):
         since it builds the full Hilbert space. The size of the matrices in the simulator
         scale as :math:`3^n` where :math:`n` is the number of wires in the circuit. This
         is sufficient to investigate characterization and calibration experiments which are
-        typically executed on a small number of qubits.
+        typically executed on a small number of transmons.
     """
 
     def __init__(self, shots: int = 2048, **kwargs):
