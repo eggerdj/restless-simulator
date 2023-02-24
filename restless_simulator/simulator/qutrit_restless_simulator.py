@@ -118,9 +118,9 @@ class QutritRestlessSimulator(BackendV2):
     """A simulator of restless measurements with qutrits.
 
     Simulate quantum circuits in the qutrit subspace without reset. Each circuit starts running
-    immediately after the previous measurement. The restless simulator samples shots by
-    building transition matrices. For each circuit a quantum channel describing the circuit
-    is created and this quantum channel is turned into a transition matrix.
+    immediately after the previous measurement. The restless simulator samples shots
+    from computed transition matrices. For each circuit a quantum channel describing
+    the circuit is created and this quantum channel is turned into a transition matrix.
 
     This simulator allows one to investigate the effects of leakage in restless circuit
     execution, i.e., circuits are executed without qubit reset. This is typically relevant
