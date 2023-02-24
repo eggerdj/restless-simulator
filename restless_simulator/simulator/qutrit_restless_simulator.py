@@ -537,7 +537,7 @@ class QutritRestlessSimulator(BackendV2):
                 success=True,
                 data=exp_data,
                 header=header,
-                meas_level=1,
+                meas_level=2,
                 status="Success",
                 meas_return="single",
                 **result_data,

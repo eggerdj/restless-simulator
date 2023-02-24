@@ -67,3 +67,20 @@ class TestQubitCircuitExecution(TestCase):
         result = self._backend.run(circuit, shots=10).result()
 
         self.assertEqual(result.get_counts(0), {"00": 5, "10": 5})
+
+    def test_two_qubit_gate(self):
+        """Test a circuit with a two-qubit gate.
+
+        Note: the circuit is chosen to be deterministic on purpose. Anything
+        that involves entanglement is tricky to Test. Here, the X followed by
+        a swap will make the "1"'s oscillate between the two qubits the pattern
+        of measurement outcomes is 10 -> 11 -> 01 -> 00 -> repeat.
+        """
+        circuit = QuantumCircuit(2)
+        circuit.x(0)
+        circuit.swap(0, 1)
+
+        result = self._backend.run(circuit, shots=10).result()
+        expected = ["10", "11", "01", "00", "10", "11", "01", "00", "10", "11"]
+
+        self.assertEqual(result.get_memory(), expected)
