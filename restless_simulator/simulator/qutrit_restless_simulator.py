@@ -123,8 +123,9 @@ class QutritRestlessSimulator(BackendV2):
     the circuit is created and this quantum channel is turned into a transition matrix.
 
     This simulator allows one to investigate the effects of leakage in restless circuit
-    execution, i.e., circuits are executed without qubit reset. This is typically relevant
-    for circuits the perform characterization and calibration tasks.
+    execution, i.e., circuits are executed without reset and in the qutrit subspace
+    :math:`{|0\rangle{}, |1\rangle{}, |2\rangle{}}`. This is typically relevant for
+    circuits that perform characterization and calibration tasks.
 
     .. note::
 
