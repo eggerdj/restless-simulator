@@ -1,26 +1,15 @@
-# Quantum Prototype Installation Guide
+# Restless simulator installation guide
 
-This document should walk users through the process of setting up their Python environment, installing dependencies, and installing the prototype software.
+Here, we show how to install the restless simulator assuming that you already have a
+Python environment ready to go.
 
-## Setting up Python Environment
+## Installing the restless simulator and its depencencies
 
-Show the user how to create a fresh Python environment
+The restless simulator can be installed locally by making a fork of the Github repository.
+To install the simulator run `pip install .` (or `pip install -e .` for editable mode) 
+inside a local copy of the repository.
 
-## Installing Depencencies
+## Testing the installation
 
-Show the user how to install the *required* quantum prototype dependencies
-
-## Installing Optional Dependencies
-
-Tell the user about some optional packages they may want to install. Explain what functionality is provided by each optional package in this section.
-
-## Installing Quantum Prototype Software
-
-Tell the user how to install the prototype software.
-
-## Testing the Installation
-
-Give the user some steps to validate that the installation was successful.
-
-Example:
-`$ quantum_prototype --help`
+You can test that the restless simulator has been installed correctly by running the
+following import `from restless_simulator.simulator import QutritRestlessSimulator`.
