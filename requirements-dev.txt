@@ -14,5 +14,4 @@ ddt~=1.4.2
 # Black's formatting rules can change between major versions, so we use
 # the ~= specifier for it.
 black[jupyter]~=22.1
-matplotlib
 pylatexenc

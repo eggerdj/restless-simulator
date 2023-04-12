@@ -1,3 +1,14 @@
+# This code is a Qiskit project.
+
+# (C) Copyright IBM 2023.
+
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
 """Qutrit Restless Simulator"""
 import uuid
 from dataclasses import dataclass, field
@@ -99,9 +110,26 @@ class RestlessCircuitData:
 
 
 class QutritRestlessSimulator(BackendV2):
-    """A simulator of restless measurements with qutrits."""
+    """A simulator of restless measurements with qutrits.
 
-    # TODO: write detailed class docstring.
+    Simulate quantum circuits in the qutrit subspace without reset. Each circuit starts running
+    immediately after the previous measurement. The restless simulator samples shots
+    from computed transition matrices. For each circuit a quantum channel describing
+    the circuit is created and this quantum channel is turned into a transition matrix.
+
+    This simulator allows one to investigate the effects of leakage in restless circuit
+    execution, i.e., circuits are executed without reset and in the qutrit subspace
+    :math:`{|0\rangle{}, |1\rangle{}, |2\rangle{}}`. This is typically relevant for
+    circuits that perform characterization and calibration tasks.
+
+    .. note::
+
+        This simulator is intended to run for small scale systems (i.e. a few qutrits)
+        since it builds the full Hilbert space. The size of the matrices in the simulator
+        scale as :math:`3^n` where :math:`n` is the number of wires in the circuit. This
+        is sufficient to investigate characterization and calibration experiments which are
+        typically executed on a small number of transmons.
+    """
 
     def __init__(self, shots: int = 2048, **kwargs):
         """
@@ -168,10 +196,12 @@ class QutritRestlessSimulator(BackendV2):
             shots: The number of shots to simulate.
             meas_assignment_mat: The measurement assignment matrix to use for all circuits, if not
                 set when calling :meth:`run`. Defaults to perfect qubit measurement, where the first
-                and second excited states are treated as one excited state.
+                and second excited states are treated as one excited state. This matrix is the
+                matrix for a single qutrit. In multi-qutrit circuits it applies to all qutrits.
             meas_transition_mat: The measurement transition matrix to use for all circuits, if not
                 set when calling :meth:`run`. Defaults to an ideal post-measurement process where
-                the   measurement state does not change.
+                the   measurement state does not change. This matrix is the matrix for a single
+                qutrit. In multi-qutrit circuits it applies to all qutrits.
             ignore_measurement_instructions: Whether the simulator should ignore measurement
                 instructions in circuits. If False, an error is thrown by the simulator if a
                 measurement is encountered.
@@ -201,8 +231,9 @@ class QutritRestlessSimulator(BackendV2):
         )
         return opts
 
+    @staticmethod
     def compute_circuit_channel(
-        self, in_circs: List[QuantumCircuit]
+        in_circuits: List[QuantumCircuit],
     ) -> List[QuantumChannel]:
         """Computes the quantum channels for each circuit.
 
@@ -216,7 +247,7 @@ class QutritRestlessSimulator(BackendV2):
               True. If False, an error is raised.
 
         Args:
-            in_circs: List of circuits.
+            in_circuits: List of circuits.
 
         Raises:
             RuntimeError: if an incompatible circuit instruction is encountered.
@@ -225,49 +256,14 @@ class QutritRestlessSimulator(BackendV2):
             A list of quantum channels corresponding to ``in_circs``.
         """
         channels = []
-        for circ in in_circs:
-            # Decompose in-case we have nested circuits
-            simplified_circ = circ.decompose()
-            # Create initial identity channel
-            channel = SuperOp(np.eye(9).astype(np.float128))
-            for inst in simplified_circ.data:
-                # QutritUnitaryGate
-                if isinstance(inst.operation, QutritUnitaryGate):
-                    operator = inst.operation.as_operator()
-                    inst_channel = SuperOp(Kraus(operator.data))
-                    channel = inst_channel @ channel
-                # QutritQuantumChannelOperation
-                elif isinstance(inst.operation, QutritQuantumChannelOperation):
-                    inst_channel = inst.operation.channel
-                    channel = SuperOp(inst_channel) @ channel
-                # If operation has a `to_matrix()` method
-                elif hasattr(inst.operation, "to_matrix"):
-                    mat = inst.operation.to_matrix()
-                    if mat.shape == (3, 3):
-                        inst_channel = SuperOp(Kraus(mat))
-                    elif mat.shape == (2, 2):
-                        qutrit_mat = np.eye(3, dtype=complex)
-                        qutrit_mat[0:2, 0:2] = mat
-                        inst_channel = SuperOp(Kraus(qutrit_mat))
-                    else:
-                        # TODO Handle matrix embedding in a larger space here.
-                        raise RuntimeError(
-                            f"{type(self).__name__} encountered an instruction with a "
-                            "'to_matrix()' method but the shape of the matrix is not supported: "
-                            f"expected (3,3) or (2,2) but got {mat.shape}."
-                        )
-                    channel = inst_channel @ channel
-                elif (
-                    inst.operation.name == "measure"
-                    and self.options.ignore_measurement_instructions
-                ):
-                    continue
-                else:
-                    raise RuntimeError(
-                        f"{self.__class__.__name__} encountered unknown instruction of type "
-                        f"{type(inst.operation).__name__}: {inst.operation}"
-                    )
-            channels.append(channel)
+
+        for circuit in in_circuits:
+            # remove final measurements
+            circuit_ = circuit.remove_final_measurements(inplace=False)
+
+            qudit_circuit = circuit_to_qudit_circuit(circuit_)
+            channels.append(qudit_circuit_to_super_op(qudit_circuit))
+
         return channels
 
     def compute_transition_matrices(
@@ -320,15 +316,14 @@ class QutritRestlessSimulator(BackendV2):
             )
 
         if in_channels is None:
-            in_channels = self.compute_circuit_channel(in_circs=in_circs)
+            in_channels = self.compute_circuit_channel(in_circuits=in_circs)
 
         transition_matrices = []
 
-        # Variable to control the number of states. For 1 qutrit, this is three. We assume that all
-        # channels and circuits are for one qutrit.
-        # TODO: Extend this code to handle multiple qutrits.
-        n_states = 3
-        for chann in in_channels:
+        for channel in in_channels:
+            # Number of states is the product of the sub-dimensions.
+            n_states = np.prod(channel.input_dims())
+
             transition_matrix = np.zeros((n_states, n_states))
             for i in range(n_states):
                 # Create input state as a single qutrit pure-state: |0>, |1>, or |2>.
@@ -337,10 +332,12 @@ class QutritRestlessSimulator(BackendV2):
                 input_state_mat = np.diag(input_state_mat)
                 input_state = DensityMatrix(input_state_mat)
 
-                # Compute the output statevector
-                output_state = input_state.evolve(chann)
+                # Compute the output state-vector
+                output_state = input_state.evolve(channel)
                 transition_matrix[:, i] = output_state.probabilities()
+
             transition_matrices.append(transition_matrix)
+
         return transition_matrices
 
     def get_sample_buffers(
@@ -388,12 +385,11 @@ class QutritRestlessSimulator(BackendV2):
 
     def _validated_mats(
         self,
-        n_circuits: int,
+        circuits: List[QuantumCircuit],
         meas_assignment_mats: Optional[list_union_array] = None,
         meas_transition_mats: Optional[list_union_array] = None,
     ) -> Tuple[List[np.ndarray], List[np.ndarray]]:
-        """Create validated lists of measurement assignment and transition matrices, or raise an
-        error.
+        """Create validated lists of measurement assignment and transition matrices.
 
         This method confirms that ``meas_assignment_mats`` and ``meas_transition_mats`` are valid
         (i.e., either a NumPy array of the correct shape or a list of equivalent NumPy arrays). If
@@ -405,7 +401,7 @@ class QutritRestlessSimulator(BackendV2):
         If any of these requirements are not met, an :class:`AttributeError` is raised.
 
         Args:
-            n_circuits: Number of circuits.
+            circuits: The quantum circuits to simulate.
             meas_assignment_mats: Optional list of measurement assignment matrices. If None, the
                 ``meas_assignment_mat`` option is used for all circuits. Defaults to None.
             meas_transition_mats: Optional list of post-measurement transition matrices. If None,
@@ -422,12 +418,7 @@ class QutritRestlessSimulator(BackendV2):
             corresponding to the input arguments ``meas_assignment_mats`` and
             ``meas_transition_mats`` respectively.
         """
-        ## Check input arguments
-        # Set defaults for `meas_assignment_mats` and `meas_transition_mats` if necessary.
-        if meas_assignment_mats is None:
-            meas_assignment_mats = self.options.meas_assignment_mat
-        if meas_transition_mats is None:
-            meas_transition_mats = self.options.meas_transition_mat
+        n_circuits = len(circuits)
 
         # Handle single array for all circuits for `meas_assignment_mats` and `meas_transition_mats`
         if isinstance(
@@ -443,19 +434,45 @@ class QutritRestlessSimulator(BackendV2):
             meas_transition_mats = [meas_transition_mats] * n_circuits
 
         # Check lengths of `meas_assignment_mats` and `meas_transition_mats`.
-        if len(meas_assignment_mats) != n_circuits:
+        if meas_assignment_mats is not None and len(meas_assignment_mats) != n_circuits:
             raise AttributeError(
                 "Length of meas_assignment_mats doesn't match length of circuits: expected "
                 f"{n_circuits} entries but got {len(meas_assignment_mats)}."
             )
-        if len(meas_transition_mats) != n_circuits:
+        if meas_transition_mats is not None and len(meas_transition_mats) != n_circuits:
             raise AttributeError(
                 "Length of meas_transition_mats doesn't match length of circuits: expected "
                 f"{n_circuits} entries but got {len(meas_transition_mats)}."
             )
 
-        ##
-        return (meas_assignment_mats, meas_transition_mats)
+        # Set defaults for `meas_assignment_mats` and `meas_transition_mats` if necessary.
+        if meas_assignment_mats is None:
+            meas_assignment_mats = [self.options.meas_assignment_mat] * n_circuits
+        if meas_transition_mats is None:
+            meas_transition_mats = [self.options.meas_transition_mat] * n_circuits
+
+        # Expand the matrices to the full Hilbert space size.
+        n_qutrits = len(circuits[0].qregs[0])
+        meas_assignment_mats = [
+            self._expand_matrix(mat, n_qutrits) for mat in meas_assignment_mats
+        ]
+        meas_transition_mats = [
+            self._expand_matrix(mat, n_qutrits) for mat in meas_transition_mats
+        ]
+
+        return meas_assignment_mats, meas_transition_mats
+
+    @staticmethod
+    def _expand_matrix(matrix, num_elements):
+        """expands a matrix to the full Hilbert space."""
+        if num_elements == 1:
+            return matrix
+
+        full_matrix = np.copy(matrix)
+        for _ in range(num_elements - 1):
+            full_matrix = np.kron(full_matrix, matrix)
+
+        return full_matrix
 
     def _create_experiment_results(
         self,
@@ -474,7 +491,14 @@ class QutritRestlessSimulator(BackendV2):
                 circ_metadata = circ.metadata
             else:
                 circ_metadata = {}
-            header = QobjExperimentHeader(metadata=circ_metadata)
+
+            n_wires = len(circuits[0].qregs[0])
+            header = QobjExperimentHeader(
+                metadata=circ_metadata,
+                n_qubits=n_wires,
+                memory_slots=n_wires,
+                creg_sizes=[["meas", n_wires]],
+            )
 
             ## Add optional outputs depending on return_X options.
             result_data: Dict[str, Any] = {}
@@ -509,7 +533,7 @@ class QutritRestlessSimulator(BackendV2):
                 success=True,
                 data=exp_data,
                 header=header,
-                meas_level=1,
+                meas_level=2,
                 status="Success",
                 meas_return="single",
                 **result_data,
@@ -556,10 +580,28 @@ class QutritRestlessSimulator(BackendV2):
         )
         ##
 
-    def _initialize_circuit_data(
+    def _init_circuit_data(
         self, circuits: List[QuantumCircuit]
     ) -> List[RestlessCircuitData]:
-        channels = self.compute_circuit_channel(in_circs=circuits)
+        """Initialize the circuit data.
+
+        The circuit data holds the quantum channel for each circuit as well as
+        its transition matrix.
+
+        Args:
+            circuits: The circuits for which to initialize the circuit data.
+
+        Raises:
+            QiskitError: If the circuits do not all have the same number of wires.
+        """
+        n_wires = len(circuits[0].qregs[0])
+        for circuit in circuits:
+            if len(circuit.qregs[0]) != n_wires:
+                raise QiskitError(
+                    "The restless simulator only accepts circuits with the same number of wires."
+                )
+
+        channels = self.compute_circuit_channel(in_circuits=circuits)
         transition_matrices = self.compute_transition_matrices(in_channels=channels)
         circuit_data = [
             RestlessCircuitData(
@@ -569,9 +611,8 @@ class QutritRestlessSimulator(BackendV2):
         ]
         return circuit_data
 
-    # pylint: disable=too-many-arguments
+    @staticmethod
     def _simulate_single_shot(
-        self,
         input_state: int,
         circuit_data: RestlessCircuitData,
         circuit_buffer: SampleBuffer,
@@ -620,7 +661,7 @@ class QutritRestlessSimulator(BackendV2):
     # pylint: disable=arguments-renamed
     def run(
         self,
-        circuits: List[QuantumCircuit],
+        circuits: Union[List[QuantumCircuit], QuantumCircuit],
         meas_assignment_mats: Optional[Union[np.ndarray, List[np.ndarray]]] = None,
         meas_transition_mats: Optional[Union[np.ndarray, List[np.ndarray]]] = None,
         **kwargs,
@@ -628,12 +669,16 @@ class QutritRestlessSimulator(BackendV2):
         """Simulate qutrit circuits with restless circuit execution.
 
         Args:
-            circuits: List of circuits, with mixed qutrit and qubit operations. Measurement gates
-                are not currently supported, and are implicitly added during simulation.
+            circuits: A circuit or list of circuits, with mixed qutrit and qubit operations.
+                Measurement gates are not currently supported, and are implicitly added during
+                simulation.
             meas_assignment_mats: Optional list of measurement assignment matrices. If None, the
-                ``meas_assignment_mat`` option is used for all circuits. Defaults to None.
+                ``meas_assignment_mat`` option is used for all circuits. Defaults to None. This
+                argument can be a list so that each circuit can have its unique assignment matrix.
             meas_transition_mats: Optional list of post-measurement transition matrices. If None,
-                the ``meas_transition_mat`` option is used for all circuits. Defaults to None.
+                the ``meas_transition_mat`` option is used for all circuits. Defaults to None. This
+                argument can be a list so that each circuit can have its unique measurement
+                transition matrix.
 
         Raises:
             AttributeError: if the number of measurement assignment matrices doesn't match the
@@ -644,11 +689,15 @@ class QutritRestlessSimulator(BackendV2):
         Returns:
             A job with the results of simulating all circuits in a restless manner.
         """
+        self.set_options(**kwargs)
 
-        ## Create circuit sample buffers and circuit_data list.
+        if isinstance(circuits, QuantumCircuit):
+            circuits = [circuits]
+
+        # Create circuit sample buffers and circuit_data list.
         # `circuit_data` is a list of RestlessCircuitData instances which contain restless results
         # for each circuit.
-        circuit_data = self._initialize_circuit_data(circuits)
+        circuit_data = self._init_circuit_data(circuits)
 
         # `circuit_buffers` is a list of sample buffers for the collapsed measurement states of each
         # circuit.
@@ -661,7 +710,7 @@ class QutritRestlessSimulator(BackendV2):
         ## Create measurement sample buffers.
         # Validate input measurement arguments.
         meas_assignment_mats, meas_transition_mats = self._validated_mats(
-            len(circuits), meas_assignment_mats, meas_transition_mats
+            circuits, meas_assignment_mats, meas_transition_mats
         )
 
         # Create buffers.
@@ -673,15 +722,14 @@ class QutritRestlessSimulator(BackendV2):
         )
         ##
 
-        ## Create list of cumulative transition matrices. Only used if
-        ## self.options.compute_cumulative_trans_mats is True.
+        # Create list of cumulative transition matrices. Only used if
+        # self.options.compute_cumulative_trans_mats is True.
         cum_trans_mats = []
-        ##
 
         # Start with the ground-state |0>
         prev_state = 0
-        # Previous shot cumulative transition matrix.
-        prev_trans_mat = np.eye(3).astype(np.float128)
+        # Previous shot cumulative transition matrix. Will be initialized to ID.
+        prev_trans_mat = None
 
         # Loop over shots
         for _ in range(self.options.shots):
@@ -692,6 +740,9 @@ class QutritRestlessSimulator(BackendV2):
 
                 # Compute cumulative transition matrix
                 if self.options.compute_cumulative_trans_mats:
+                    if prev_trans_mat is None:
+                        prev_trans_mat = np.eye(circ_data.transition_matrix.shape[0])
+
                     curr_cum_trans_mat = circ_data.transition_matrix @ prev_trans_mat
                     cum_trans_mats.append(curr_cum_trans_mat.copy())
                     prev_trans_mat = meas_transition_mats[i_circ] @ curr_cum_trans_mat
