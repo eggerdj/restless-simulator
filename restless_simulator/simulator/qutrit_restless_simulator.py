@@ -11,9 +11,9 @@
 
 """Qutrit Restless Simulator"""
 import uuid
+import warnings
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
-import warnings
 
 import numpy as np
 from qiskit import QuantumCircuit
