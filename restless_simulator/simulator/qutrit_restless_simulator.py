@@ -14,6 +14,7 @@ import uuid
 import warnings
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+import warnings
 
 import numpy as np
 from qiskit import QuantumCircuit
@@ -662,6 +663,24 @@ class QutritRestlessSimulator(BackendV2):
         circuit_data.post_meas_states.append(post_meas_state)
 
         return post_meas_state
+
+    def set_options(self, **fields):
+        """Set the options fields for the backend
+
+        This method is used to update the options of a backend. If
+        you need to change any of the options prior to running just
+        pass in the kwarg with the new value for the options.
+
+        This method raises warnings, instead of errors, unlike
+        :class:`Backend` which raises AttributeErrors.
+
+        Args:
+            fields: The fields to update the options
+        """
+        for field in fields:
+            if not hasattr(self._options, field):
+                warnings.warn("Options field %s is not valid for this backend" % field, stacklevel=2)
+        self._options.update_options(**fields)
 
     # pylint: disable=arguments-renamed
     def run(
