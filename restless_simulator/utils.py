@@ -8,6 +8,24 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+"""
+============================================================
+Utilities module (:mod:`restless_simulator.utils`)
+============================================================
+
+.. currentmodule:: restless_simulator.utils
+
+Restless Post-Processing Functions
+==================================
+
+.. autosummary::
+    :toctree: ../stubs/
+
+    extract_memory
+    memory_to_probabilities
+    restless_memory_to_memory
+
+"""
 import numpy as np
 
 from restless_simulator.simulator import RestlessJob

@@ -97,7 +97,7 @@ def circuit_to_qudit_circuit(
             inst.operation, (QutritUnitaryGate, QutritQuantumChannelOperation)
         ):
             continue
-        elif isinstance(inst.operation, Gate):
+        if isinstance(inst.operation, Gate):
             new_circuit.data[idx].operation = QutritUnitaryGate.from_qubit_gate(
                 inst.operation,
                 label=inst.operation.name,

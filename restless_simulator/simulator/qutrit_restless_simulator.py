@@ -20,7 +20,7 @@ from qiskit import QuantumCircuit
 from qiskit.exceptions import QiskitError
 from qiskit.providers import BackendV2, Options
 from qiskit.qobj import QobjExperimentHeader
-from qiskit.quantum_info import DensityMatrix, Kraus, SuperOp
+from qiskit.quantum_info import DensityMatrix, Kraus
 from qiskit.quantum_info.operators.channel.quantum_channel import QuantumChannel
 from qiskit.result import Result
 from qiskit.result.models import ExperimentResult, ExperimentResultData
