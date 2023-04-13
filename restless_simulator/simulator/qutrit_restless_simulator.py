@@ -12,9 +12,8 @@
 """Qutrit Restless Simulator"""
 import uuid
 import warnings
-from dataclasses import dataclass, field
+import dataclasses
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
-import warnings
 
 import numpy as np
 from qiskit import QuantumCircuit
@@ -93,21 +92,21 @@ class RestlessBackendProperties:
 
 
 # pylint: disable=too-many-instance-attributes
-@dataclass
+@dataclasses.dataclass
 class RestlessCircuitData:
     """Class for storing circuit-specific results during restless execution."""
 
-    memory: List[str] = field(default_factory=list)
+    memory: List[str] = dataclasses.field(default_factory=list)
     """Hex. representation of measurement outcomes."""
-    memory_labelled: List[int] = field(default_factory=list)
+    memory_labelled: List[int] = dataclasses.field(default_factory=list)
     """int representation of measurement outcomes."""
-    meas_states: List[int] = field(default_factory=list)
+    meas_states: List[int] = dataclasses.field(default_factory=list)
     """Collapsed measurement states."""
-    post_meas_states: List[int] = field(default_factory=list)
+    post_meas_states: List[int] = dataclasses.field(default_factory=list)
     """Post measurement states."""
-    input_states: List[int] = field(default_factory=list)
+    input_states: List[int] = dataclasses.field(default_factory=list)
     """Input states."""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Any] = dataclasses.field(default_factory=dict)
     """Circuit metadata"""
     channel: QuantumChannel = None
     """Circuit's corresponding quantum channel."""
@@ -679,7 +678,10 @@ class QutritRestlessSimulator(BackendV2):
         """
         for field in fields:
             if not hasattr(self._options, field):
-                warnings.warn("Options field %s is not valid for this backend" % field, stacklevel=2)
+                warnings.warn(
+                    f"Options field {field} is not valid for this backend",
+                    stacklevel=2,
+                )
         self._options.update_options(**fields)
 
     # pylint: disable=arguments-renamed
