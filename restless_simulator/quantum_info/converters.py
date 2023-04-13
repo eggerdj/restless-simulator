@@ -93,15 +93,15 @@ def circuit_to_qudit_circuit(
     new_circuit = circuit if inplace else circuit.copy()
 
     for idx, inst in enumerate(new_circuit.data):
-        if isinstance(inst.operation, Gate):
+        if isinstance(
+            inst.operation, (QutritUnitaryGate, QutritQuantumChannelOperation)
+        ):
+            continue
+        elif isinstance(inst.operation, Gate):
             new_circuit.data[idx].operation = QutritUnitaryGate.from_qubit_gate(
                 inst.operation,
                 label=inst.operation.name,
             )
-        elif isinstance(
-            inst.operation, (QutritUnitaryGate, QutritQuantumChannelOperation)
-        ):
-            continue
         else:
             raise NotImplementedError(
                 f"Can only convert instances of Gate to {QutritUnitaryGate.__name__}."

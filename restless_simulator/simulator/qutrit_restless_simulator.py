@@ -27,6 +27,11 @@ from qiskit.result.models import ExperimentResult, ExperimentResultData
 from qiskit.transpiler import Target
 
 from restless_simulator.circuit import QutritQuantumChannelOperation, QutritUnitaryGate
+from restless_simulator.quantum_info.converters import (
+    circuit_to_qudit_circuit,
+    qudit_circuit_to_super_op,
+)
+
 from .restless_job import RestlessJob
 from .sample_buffer import SampleBuffer
 
