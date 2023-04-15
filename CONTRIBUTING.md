@@ -2,21 +2,23 @@
 
 **We appreciate all kinds of help, so thank you!**
 
-## Contributing to Quantum Prototype Template
+## Contributing to the restless simulator
 
 Specific details for contributing to this project are outlined below.
 
 ### Reporting Bugs and Requesting Features
 
-Users are encouraged to use GitHub Issues for reporting issues and requesting features.
+We encourage users to use GitHub Issues for reporting issues and requesting features.
 
-### Ask/Answer Questions and Discuss Quantum Prototype Template
+### Ask/Answer Questions and Discuss the Restless Simulator
 
-Users are encouraged to use GitHub Discussions for engaging with researchers, developers, and other users regarding this quantum prototype and the provided examples.
+We encourage users to use GitHub Discussions for engaging with researchers, developers, and other 
+users regarding this restless simulator and the provided examples.
 
 ### Project Code Style
 
-Code in this repository should conform to PEP8 standards. Style/lint checks are run to validate this. Line length must be limited to no more than 88 characters.
+Code in this repository should conform to PEP8 standards. Style/lint checks are run to 
+validate this. Line length must be limited to no more than 88 characters.
 
 ### Pull Request Checklist
 
