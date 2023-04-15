@@ -6,7 +6,7 @@ Restless circuit execution is a method to execute characterization and calibrati
 quantum circuits without resetting the qubits after each measurement.
 The measurement must be projective, and the outcome of one circuit is the initial
 state to the next quantum circuit that the hardware executes.
-The qubits therefore sometimes begin the :math:`|1\rangle` state which can be
+The qubits therefore sometimes begin the `|1>` state which is
 accounted for by post-processing.
 This allows faster circuit execution and speeds-up tasks such as gate calibration
 and randomized benchmarking.
@@ -14,8 +14,8 @@ and randomized benchmarking.
 However, most quantum architectures embed a qubit in a larger Hilbert space.
 This is the case for superconducting transmon qubits.
 For transmon qubits improperly calibrated pulses may cause population to exit
-the qubit sub-space, spanned by :math:`\{|0\rangle, |1\rangle\}`, and enter into
-higher excited states, typically the :math:`|2\rangle` state.
+the qubit sub-space, spanned by `{|0>, |1>}`, and enter into
+higher excited states, typically the `|2>` state.
 This effect is known as leakage.
 Since restless circuit execution does not reset the qubits we may wonder
 how leakage builds-up population outside the qubit sub-space and whether
