@@ -13,6 +13,11 @@ In restless circuit execution, the qubits are not reset in between measurements.
 Leakage may therefore cause a build-up of population in states outside the computational
 sub-space.
 The simulator in this package helps explore these issues.
+Importantly, the restless simulator computes the dynamics on the full matrices corresponding
+to the quantum circuits.
+The size of these matrices scales exponentially with the number of transmons in the circuit. 
+This is fine since the restless simulator is intended to simulate characterization and calibration 
+experiments which involve only a few transmons.
 
 ### Table of Contents
 
@@ -21,19 +26,17 @@ The simulator in this package helps explore these issues.
 1.  [About the Project](docs/project_overview.md)
 2.  [Beginner's Guide](docs/beginners_guide.md)
 3.  [Installation](INSTALL.md)
-4.  [Quickstart Guide](docs/quickstart_guide.md)
-5.  [Tutorials](docs/tutorials/example_tutorial.ipynb)
-6.  [How-Tos](docs/how_tos/example_how_to.ipynb)
-7.  [Prototype Template File Glossary](docs/file-map-and-description.md)
-8.  [How to Give Feedback](#how-to-give-feedback)
-9.  [Contribution Guidelines](#contribution-guidelines)
-10. [References and Acknowledgements](#references-and-acknowledgements)
-11. [License](#license)
+4.  [Tutorials](docs/tutorials/)
+5.  [How-Tos](docs/how_tos/)
+6.  [Restless Simulator Glossary](docs/file-map-and-description.md)
+7.  [How to Give Feedback](#how-to-give-feedback)
+8.  [Contribution Guidelines](#contribution-guidelines)
+9. [References and Acknowledgements](#references-and-acknowledgements)
+10. [License](#license)
 
 ##### For Developers/Contributors
 
 1. [Contribution Guide](CONTRIBUTING.md)
-2. [Technical Docs](docs/technical_docs.md)
 
 
 ----------------------------------------------------------------------------------------------------
