@@ -22,6 +22,7 @@ from qiskit.providers import BackendV2, Options
 from qiskit.qobj import QobjExperimentHeader
 from qiskit.quantum_info import DensityMatrix, Kraus
 from qiskit.quantum_info.operators.channel.quantum_channel import QuantumChannel
+from qiskit.providers import QubitProperties
 from qiskit.result import Result
 from qiskit.result.models import ExperimentResult, ExperimentResultData
 from qiskit.transpiler import Target
@@ -146,11 +147,11 @@ class QutritRestlessSimulator(BackendV2):
             name="QutritRestlessSimulator",
             description="A restless simulator for qutrits.",
         )
-        self._setup_target()
         self.set_options(
             shots=shots,
             **kwargs,
         )
+        self._setup_target()
 
     @property
     def shots(self) -> int:
@@ -160,16 +161,22 @@ class QutritRestlessSimulator(BackendV2):
     def _setup_target(self):
         """Setup a :class:`Target` instance for the simulator.
 
-        The target has the following features:
-        *. Supports only one qubit/qutrit.
-        *. Has a pulse sample-time of :math:`0.222ns`.
-        *. Supports :class:`QutritUnitaryGate` and :class:`QutritQuantumChannelOperation`
+        The target has the following features: *. Has a pulse sample-time of :math:`0.222ns`. *.
+        Supports :class:`QutritUnitaryGate` and :class:`QutritQuantumChannelOperation`
            instructions.
+
+        All qubits are identical and have the same t1 time, defined by the ``default_qubit_t1_time``
+        option. The number of qubits is controlled by the ``default_num_qubits`` option.
         """
+        qubit_properties = [
+            QubitProperties(t1=self.options.default_qubit_t1_time)
+            for _ in range(self.options.default_num_qubits)
+        ]
         self._target = Target(
             description="Target for qutrit restless simulator.",
-            num_qubits=1,  # TODO: Extend functionality to more than one qutrit.
+            num_qubits=self.options.default_num_qubits,
             dt=0.222e-9,
+            qubit_properties=qubit_properties,
         )
 
         # Add dummy gates to indicate support for QutritUnitaryGate and
@@ -221,6 +228,9 @@ class QutritRestlessSimulator(BackendV2):
             return_channel: Whether to return circuit channels or not. Defaults to False.
             return_trans_mat: Whether to return circuit transition matrices or not. Defaults to
                 False.
+            default_qubit_t1_time: The default T1 time, in seconds, reported by the backend target
+                and :meth:`properties`. Does not impact actual qubit decoherence. Defaults to 1.
+            default_num_qubits: The default number of qubits to report. Defaults to 3.
         """
         opts = Options(
             shots=1024,
@@ -233,6 +243,8 @@ class QutritRestlessSimulator(BackendV2):
             return_memory_labelled=False,
             return_channel=False,
             return_trans_mat=False,
+            default_qubit_t1_time=1,
+            default_num_qubits=3,
         )
         return opts
 
@@ -791,4 +803,4 @@ class QutritRestlessSimulator(BackendV2):
 
     def properties(self) -> RestlessBackendProperties:
         """Return the backend properties."""
-        return RestlessBackendProperties()
+        return RestlessBackendProperties(t1_time=self.options.default_qubit_t1_time)
