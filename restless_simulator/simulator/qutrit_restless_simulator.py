@@ -10,11 +10,10 @@
 # that they have been altered from the originals.
 
 """Qutrit Restless Simulator"""
-
 import uuid
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 import warnings
+import dataclasses
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from qiskit import QuantumCircuit
@@ -23,15 +22,17 @@ from qiskit.providers import BackendV2, Options
 from qiskit.qobj import QobjExperimentHeader
 from qiskit.quantum_info import DensityMatrix, Kraus
 from qiskit.quantum_info.operators.channel.quantum_channel import QuantumChannel
+from qiskit.providers import QubitProperties
 from qiskit.result import Result
 from qiskit.result.models import ExperimentResult, ExperimentResultData
 from qiskit.transpiler import Target
 
 from restless_simulator.circuit import QutritQuantumChannelOperation, QutritUnitaryGate
 from restless_simulator.quantum_info.converters import (
-    qudit_circuit_to_super_op,
     circuit_to_qudit_circuit,
+    qudit_circuit_to_super_op,
 )
+
 from .restless_job import RestlessJob
 from .sample_buffer import SampleBuffer
 
@@ -92,21 +93,21 @@ class RestlessBackendProperties:
 
 
 # pylint: disable=too-many-instance-attributes
-@dataclass
+@dataclasses.dataclass
 class RestlessCircuitData:
     """Class for storing circuit-specific results during restless execution."""
 
-    memory: List[str] = field(default_factory=list)
+    memory: List[str] = dataclasses.field(default_factory=list)
     """Hex. representation of measurement outcomes."""
-    memory_labelled: List[int] = field(default_factory=list)
+    memory_labelled: List[int] = dataclasses.field(default_factory=list)
     """int representation of measurement outcomes."""
-    meas_states: List[int] = field(default_factory=list)
+    meas_states: List[int] = dataclasses.field(default_factory=list)
     """Collapsed measurement states."""
-    post_meas_states: List[int] = field(default_factory=list)
+    post_meas_states: List[int] = dataclasses.field(default_factory=list)
     """Post measurement states."""
-    input_states: List[int] = field(default_factory=list)
+    input_states: List[int] = dataclasses.field(default_factory=list)
     """Input states."""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Any] = dataclasses.field(default_factory=dict)
     """Circuit metadata"""
     channel: QuantumChannel = None
     """Circuit's corresponding quantum channel."""
@@ -146,11 +147,11 @@ class QutritRestlessSimulator(BackendV2):
             name="QutritRestlessSimulator",
             description="A restless simulator for qutrits.",
         )
-        self._setup_target()
         self.set_options(
             shots=shots,
             **kwargs,
         )
+        self._setup_target()
 
     @property
     def shots(self) -> int:
@@ -160,16 +161,22 @@ class QutritRestlessSimulator(BackendV2):
     def _setup_target(self):
         """Setup a :class:`Target` instance for the simulator.
 
-        The target has the following features:
-        *. Supports only one qubit/qutrit.
-        *. Has a pulse sample-time of :math:`0.222ns`.
-        *. Supports :class:`QutritUnitaryGate` and :class:`QutritQuantumChannelOperation`
+        The target has the following features: *. Has a pulse sample-time of :math:`0.222ns`. *.
+        Supports :class:`QutritUnitaryGate` and :class:`QutritQuantumChannelOperation`
            instructions.
+
+        All qubits are identical and have the same t1 time, defined by the ``default_qubit_t1_time``
+        option. The number of qubits is controlled by the ``default_num_qubits`` option.
         """
+        qubit_properties = [
+            QubitProperties(t1=self.options.default_qubit_t1_time)
+            for _ in range(self.options.default_num_qubits)
+        ]
         self._target = Target(
             description="Target for qutrit restless simulator.",
-            num_qubits=1,  # TODO: Extend functionality to more than one qutrit.
+            num_qubits=self.options.default_num_qubits,
             dt=0.222e-9,
+            qubit_properties=qubit_properties,
         )
 
         # Add dummy gates to indicate support for QutritUnitaryGate and
@@ -221,6 +228,9 @@ class QutritRestlessSimulator(BackendV2):
             return_channel: Whether to return circuit channels or not. Defaults to False.
             return_trans_mat: Whether to return circuit transition matrices or not. Defaults to
                 False.
+            default_qubit_t1_time: The default T1 time, in seconds, reported by the backend target
+                and :meth:`properties`. Does not impact actual qubit decoherence. Defaults to 1.
+            default_num_qubits: The default number of qubits to report. Defaults to 3.
         """
         opts = Options(
             shots=1024,
@@ -233,6 +243,8 @@ class QutritRestlessSimulator(BackendV2):
             return_memory_labelled=False,
             return_channel=False,
             return_trans_mat=False,
+            default_qubit_t1_time=1,
+            default_num_qubits=3,
         )
         return opts
 
@@ -514,7 +526,7 @@ class QutritRestlessSimulator(BackendV2):
                 result_data["post_meas_state"] = data.post_meas_states
 
             # return_meas_state
-            if kwargs.get("return_post_meas_state", self.options.return_meas_state):
+            if kwargs.get("return_meas_state", self.options.return_meas_state):
                 result_data["meas_state"] = data.meas_states
 
             # return_memory_labelled
@@ -663,6 +675,27 @@ class QutritRestlessSimulator(BackendV2):
 
         return post_meas_state
 
+    def set_options(self, **fields):
+        """Set the options fields for the backend
+
+        This method is used to update the options of a backend. If
+        you need to change any of the options prior to running just
+        pass in the kwarg with the new value for the options.
+
+        This method raises warnings, instead of errors, unlike
+        :class:`Backend` which raises AttributeErrors.
+
+        Args:
+            fields: The fields to update the options
+        """
+        for field in fields:
+            if not hasattr(self._options, field):
+                warnings.warn(
+                    f"Options field {field} is not valid for this backend",
+                    stacklevel=2,
+                )
+        self._options.update_options(**fields)
+
     # pylint: disable=arguments-renamed
     def run(
         self,
@@ -770,4 +803,4 @@ class QutritRestlessSimulator(BackendV2):
 
     def properties(self) -> RestlessBackendProperties:
         """Return the backend properties."""
-        return RestlessBackendProperties()
+        return RestlessBackendProperties(t1_time=self.options.default_qubit_t1_time)
