@@ -8,8 +8,8 @@
 
 # Restless simulator
 
-This repository is a simulator to simulate restless circuit execution with qutrits.
-In restless circuit execution, the qubits are not reset in between measurements.
+This repository is a simulator to simulate restless circuit execution with qutrits [1].
+In restless circuit execution, the qubits are not reset in between measurements [2, 3].
 Leakage may therefore cause a build-up of population in states outside the computational
 sub-space.
 The simulator in this package helps explore these issues.
@@ -18,6 +18,7 @@ to the quantum circuits.
 The size of these matrices scales exponentially with the number of transmons in the circuit. 
 This is fine since the restless simulator is intended to simulate characterization and calibration 
 experiments which involve only a few transmons.
+An example of the type of research that this repository enables is shown in Ref. [1].
 
 ### Table of Contents
 
@@ -57,12 +58,15 @@ For information on how to contribute to this project, please take a look at our 
 ----------------------------------------------------------------------------------------------------
 
 ## References and Acknowledgements
-[1] Caroline Tornow, Naoki Kanazawa, William E. Shanks, Daniel J. Egger,
+[1] Conrad J. Haupt, Daniel J. Egger, Leakage in restless quantum gate calibration,
+arxiv:2304.09297 (2023). https://arxiv.org/abs/2304.09297
+
+[2] Caroline Tornow, Naoki Kanazawa, William E. Shanks, Daniel J. Egger,
 Minimum quantum run-time characterization and calibration via restless
 measurements with dynamic repetition rates, Physics Review Applied **17**,
 064061 (2022). https://arxiv.org/abs/2202.06981
 
-[2] Max Werninghaus, Daniel J. Egger, Stefan Filipp, High-speed calibration and
+[3] Max Werninghaus, Daniel J. Egger, Stefan Filipp, High-speed calibration and
 characterization of superconducting quantum processors without qubit reset,
 PRX Quantum 2, 020324 (2021). https://arxiv.org/abs/2010.06576
 
